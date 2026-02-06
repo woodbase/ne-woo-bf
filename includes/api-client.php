@@ -5,7 +5,7 @@ function nebf_api_request_stockfile()
 
     $username = get_option('nebf_api_username');
     $secret   = get_option('nebf_api_secret');
-    $testmode = get_option('nebf_api_testmode') ? 'true' : 'true';
+    $testmode = get_option('nebf_api_testmode') === '1' ? 'true' : 'false';
 
     $endpoint = 'https://www.beautyfort.com/api/soap';
 

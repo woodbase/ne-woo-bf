@@ -16,6 +16,15 @@ add_action('admin_init', function () {
         'nebf_api_secret',
         ['sanitize_callback' => 'sanitize_text_field']
     );
+    register_setting(
+        'nebf_settings_group',
+        'nebf_api_testmode',
+        [
+            'sanitize_callback' => function ($value) {
+                return $value === '1' ? '1' : '0';
+            }
+        ]
+    );
 });
 
 /**
@@ -23,32 +32,29 @@ add_action('admin_init', function () {
  */
 function nebf_settings_page()
 {
-    // OBS: INGEN current_user_can här!
-    // WordPress hanterar behörighet via add_menu_page
-
-    $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'settings';
-
+    $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'products';
+    $base_url   = admin_url('admin.php?page=nordic-equilibro-beautyfort');
 ?>
     <div class="wrap">
-        <h1>Nordic Equilibro – Beauty Fort</h1>
+        <h1>Nordic Equilibro – Produkthantering</h1>
 
         <h2 class="nav-tab-wrapper">
-            <a href="<?php echo admin_url('admin.php?page=nebf-api-view&tab=settings'); ?>"
-                class="nav-tab <?php echo $active_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
-                Inställningar
-            </a>
-
-            <a href="<?php echo admin_url('admin.php?page=nebf-api-view&tab=products'); ?>"
+            <a href="<?php echo esc_url($base_url . '&tab=products'); ?>"
                 class="nav-tab <?php echo $active_tab === 'products' ? 'nav-tab-active' : ''; ?>">
                 Produkter
+            </a>
+
+            <a href="<?php echo esc_url($base_url . '&tab=settings'); ?>"
+                class="nav-tab <?php echo $active_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
+                Inställningar
             </a>
         </h2>
 
         <?php
-        if ($active_tab === 'products') {
-            nebf_render_products_tab();
-        } else {
+        if ($active_tab === 'settings') {
             nebf_render_settings_tab();
+        } else {
+            nebf_render_products_tab();
         }
         ?>
     </div>
@@ -113,6 +119,19 @@ function nebf_render_settings_tab()
                         class="regular-text">
                 </td>
             </tr>
+            <tr>
+                <th scope="row">Test mode</th>
+                <td>
+                    <label>
+                        <input type="checkbox"
+                            name="nebf_api_testmode"
+                            value="1"
+                            <?php checked(get_option('nebf_api_testmode'), '1'); ?>>
+                        Använd testläge (sandbox)
+                    </label>
+                </td>
+            </tr>
+
         </table>
 
         <?php submit_button('Spara inställningar'); ?>
@@ -148,7 +167,7 @@ function nebf_render_settings_tab()
  */
 function nebf_render_products_tab()
 {
-    $items = nebf_get_stock_items();
+    $items = nebf_import_products();
 
     if (is_wp_error($items)) {
         echo '<div class="notice notice-error"><p>' .

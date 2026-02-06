@@ -1,15 +1,15 @@
 <?php
 
-add_action('admin_menu', function () {
-    add_submenu_page(
-        'woocommerce',
-        'Beautyfort API',
-        'Beautyfort API',
-        'manage_woocommerce',
-        'nebf-api-view',
-        'nebf_render-api_view'
-    );
-});
+// add_action('admin_menu', function () {
+//     add_submenu_page(
+//         'woocommerce',
+//         'Beautyfort API',
+//         'Beautyfort API',
+//         'manage_woocommerce',
+//         'nebf-api-view',
+//         'nebf_render-api_view'
+//     );
+// });
 
 function nebf_render_api_view()
 {
