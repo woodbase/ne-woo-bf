@@ -1,24 +1,4 @@
 {
-    "sftp.connections": {
-        "NE Beauty": {
-            "protocol": "sftp",
-            "host": "ftp.nordicequilibro.com",
-            "port": 22,
-            "username": "ramardigital@nordicequilibro.com",
-            "password": "Anomar@1982",
-            "remotePath": "/",
-            "uploadOnSave": false,
-            "downloadOnOpen": false,
-            "syncMode": "update",
-            "ignore": [
-                ".git",
-                ".vscode",
-                "node_modules",
-                ".DS_Store",
-                "*.md"
-            ]
-        }
-    },
     "[php]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
