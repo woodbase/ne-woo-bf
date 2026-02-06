@@ -167,42 +167,48 @@ function nebf_render_settings_tab()
  */
 function nebf_render_products_tab()
 {
-    $items = nebf_import_products();
-
-    if (is_wp_error($items)) {
-        echo '<div class="notice notice-error"><p>' .
-            esc_html($items->get_error_message()) .
-            '</p></div>';
+    if (!class_exists('WooCommerce')) {
+        echo '<p>WooCommerce är inte aktivt.</p>';
         return;
     }
 
-    if (empty($items)) {
+    $products = wc_get_products([
+        'limit'  => 200,
+        'status' => ['draft', 'publish'],
+        'orderby' => 'date',
+        'order'  => 'DESC'
+    ]);
+
+    if (empty($products)) {
         echo '<p>Inga produkter hittades.</p>';
         return;
     }
 ?>
+
+    <h2>Importerade produkter</h2>
 
     <table class="widefat striped">
         <thead>
             <tr>
                 <th>SKU</th>
                 <th>Namn</th>
-                <th>Varumärke</th>
-                <th>Pris</th>
+                <th>Status</th>
                 <th>Lager</th>
+                <th>Pris</th>
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($items as $p): ?>
+            <?php foreach ($products as $product): ?>
                 <tr>
-                    <td><?php echo esc_html($p['StockCode']); ?></td>
-                    <td><?php echo esc_html($p['FullName']); ?></td>
-                    <td><?php echo esc_html($p['Brand']); ?></td>
-                    <td><?php echo esc_html($p['Price']); ?></td>
-                    <td><?php echo esc_html($p['Quantity'] ?: 0); ?></td>
+                    <td><?php echo esc_html($product->get_sku()); ?></td>
+                    <td><?php echo esc_html($product->get_name()); ?></td>
+                    <td><?php echo esc_html($product->get_status()); ?></td>
+                    <td><?php echo esc_html($product->get_stock_quantity() ?? 0); ?></td>
+                    <td><?php echo esc_html($product->get_regular_price()); ?></td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
+
 <?php
 }
