@@ -8,9 +8,31 @@ function nebf_render_products_tab()
         return;
     }
 
-    // Hantera "per page" och "page"
+    // Hantera "per page", "page", "orderby" och "order"
     $per_page = isset($_GET['per_page']) ? max(1, (int) $_GET['per_page']) : 100;
     $page     = isset($_GET['paged']) ? max(1, (int) $_GET['paged']) : 1;
+    $orderby  = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'fullname';
+    $order    = isset($_GET['order']) ? strtoupper($_GET['order']) : 'ASC';
+
+    // Sortera array
+    usort($products, function ($a, $b) use ($orderby, $order) {
+        // Hantera status (importerad eller ej)
+        if ($orderby === 'status') {
+            $valA = !empty(get_posts(['post_type' => 'product', 'meta_key' => '_beautyfort_id', 'meta_value' => $a['bf_id'], 'fields' => 'ids'])) ? 1 : 0;
+            $valB = !empty(get_posts(['post_type' => 'product', 'meta_key' => '_beautyfort_id', 'meta_value' => $b['bf_id'], 'fields' => 'ids'])) ? 1 : 0;
+        } else {
+            $valA = $a[$orderby] ?? '';
+            $valB = $b[$orderby] ?? '';
+        }
+
+        if (is_numeric($valA) && is_numeric($valB)) {
+            $cmp = $valA - $valB;
+        } else {
+            $cmp = strcasecmp((string)$valA, (string)$valB);
+        }
+
+        return $order === 'ASC' ? $cmp : -$cmp;
+    });
 
     $total_products = count($products);
     $total_pages    = ceil($total_products / $per_page);
@@ -29,25 +51,50 @@ function nebf_render_products_tab()
     </form>
     <?php
 
+    // Funktion för att skapa sorteringslänkar med indikator
+    function nebf_sort_link($column, $current_orderby, $current_order, $label)
+    {
+        $order = 'ASC';
+        $arrow = ' ⇅'; // Standardindikator för klickbara kolumner
+
+        if ($current_orderby === $column) {
+            if ($current_order === 'ASC') {
+                $order = 'DESC';
+                $arrow = ' ▲';
+            } else {
+                $order = 'ASC';
+                $arrow = ' ▼';
+            }
+        }
+
+        $url = add_query_arg([
+            'orderby' => $column,
+            'order'   => $order,
+            'paged'   => 1,
+            'per_page' => $_GET['per_page'] ?? 10,
+        ]);
+
+        return '<a href="' . esc_url($url) . '" style="text-decoration:none;">' . esc_html($label) . $arrow . '</a>';
+    }
+
     echo '<table class="widefat striped nebf-products-table">
         <thead>
             <tr>
                 <th>Välj</th>
-                <th>Status</th>
+                <th>' . nebf_sort_link('status', $orderby, $order, 'Status') . '</th>
                 <th>Bild</th>
-                <th>Namn</th>
-                <th>SKU</th>
-                <th>Varumärke</th>
-                <th>Kollektion</th>
-                <th>Pris</th>
-                <th>Lager</th>
+                <th>' . nebf_sort_link('fullname', $orderby, $order, 'Namn') . '</th>
+                <th>' . nebf_sort_link('sku', $orderby, $order, 'SKU') . '</th>
+                <th>' . nebf_sort_link('brand', $orderby, $order, 'Varumärke') . '</th>
+                <th>' . nebf_sort_link('collection', $orderby, $order, 'Kollektion') . '</th>
+                <th>' . nebf_sort_link('price', $orderby, $order, 'Pris') . '</th>
+                <th>' . nebf_sort_link('stock_level', $orderby, $order, 'Lager') . '</th>
             </tr>
         </thead>
         <tbody>';
 
     foreach ($products_page as $product):
 
-        // Är produkten redan importerad till Woo?
         $existing = get_posts([
             'post_type'  => 'product',
             'meta_key'   => '_beautyfort_id',
@@ -88,15 +135,25 @@ function nebf_render_products_tab()
     if ($total_pages > 1) {
         echo '<div class="tablenav"><div class="tablenav-pages">';
 
-        // Föregående
         if ($page > 1) {
-            $prev_url = add_query_arg(['paged' => $page - 1, 'per_page' => $per_page]);
+            $prev_url = add_query_arg([
+                'paged'   => $page - 1,
+                'per_page' => $per_page,
+                'orderby' => $orderby,
+                'order'   => $order
+            ]);
             echo '<a class="page-numbers prev" href="' . esc_url($prev_url) . '">&laquo; Föregående</a> ';
         }
 
-        // Nästa
+        echo ' Sida ' . $page . ' av ' . $total_pages . ' ';
+
         if ($page < $total_pages) {
-            $next_url = add_query_arg(['paged' => $page + 1, 'per_page' => $per_page]);
+            $next_url = add_query_arg([
+                'paged'   => $page + 1,
+                'per_page' => $per_page,
+                'orderby' => $orderby,
+                'order'   => $order
+            ]);
             echo '<a class="page-numbers next" href="' . esc_url($next_url) . '">Nästa &raquo;</a>';
         }
 
