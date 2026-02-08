@@ -31,4 +31,18 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.product-row').forEach(function(row) {
+        row.addEventListener('click', function() {
+            var accordionId = this.dataset.accordion;
+            var content = document.getElementById(accordionId);
+            if(content.style.display === 'none'){
+                content.style.display = 'table-row';
+            } else {
+                content.style.display = 'none';
+            }
+        });
+    });
+});
+
 </script>

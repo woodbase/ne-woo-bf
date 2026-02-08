@@ -92,8 +92,7 @@ function nebf_render_products_tab()
             </tr>
         </thead>
         <tbody>';
-
-    foreach ($products_page as $product):
+    foreach ($products_page as $index => $product):
 
         $existing = get_posts([
             'post_type'  => 'product',
@@ -107,9 +106,13 @@ function nebf_render_products_tab()
         $image = !empty($product['thumbnail_url'])
             ? '<img src="' . esc_url($product['thumbnail_url']) . '" width="50" height="50">'
             : '—';
+
+        // Unik ID för accordion
+        $accordion_id = 'accordion-' . $index;
     ?>
 
-        <tr class="<?= $is_imported ? 'is-imported' : ''; ?>">
+        <!-- Huvudrad -->
+        <tr class="product-row <?= $is_imported ? 'is-imported' : ''; ?>" data-accordion="<?= $accordion_id; ?>">
             <td>
                 <?php if ($is_imported): ?>
                     —
@@ -127,7 +130,20 @@ function nebf_render_products_tab()
             <td><?= esc_html($product['stock_level']); ?></td>
         </tr>
 
+        <!-- Accordion-rad -->
+        <tr class="accordion-content" id="<?= $accordion_id; ?>" style="display:none;">
+            <td colspan="9" style="background:#f9f9f9;">
+                <strong>Beskrivning:</strong> <?= esc_html($product['description'] ?? '—'); ?><br>
+                <strong>EAN:</strong> <?= esc_html($product['ean'] ?? '—'); ?><br>
+                <strong>Volym:</strong> <?= esc_html($product['volume'] ?? '—'); ?><br>
+                <strong>Färg:</strong> <?= esc_html($product['color'] ?? '—'); ?><br>
+                <strong>Ingredienser:</strong> <?= esc_html($product['ingredients'] ?? '—'); ?><br>
+                <strong>Övrigt:</strong> <?= esc_html($product['extra_info'] ?? '—'); ?>
+            </td>
+        </tr>
+
 <?php endforeach;
+
 
     echo '</tbody></table>';
 
