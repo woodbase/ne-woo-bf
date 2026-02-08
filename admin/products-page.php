@@ -1,0 +1,105 @@
+<?php
+function nebf_render_products_tab()
+{
+    $products = get_transient('nebf_beautyfort_products');
+
+    if (false === $products || empty($products)) {
+        echo '<p>Ingen BeautyFort-data laddad. Klicka på “Hämta produkter från BeautyFort”.</p>';
+        return;
+    }
+
+    // Hantera "per page" och "page"
+    $per_page = isset($_GET['per_page']) ? max(1, (int) $_GET['per_page']) : 100;
+    $page     = isset($_GET['paged']) ? max(1, (int) $_GET['paged']) : 1;
+
+    $total_products = count($products);
+    $total_pages    = ceil($total_products / $per_page);
+
+    // Slice array för aktuell sida
+    $offset = ($page - 1) * $per_page;
+    $products_page = array_slice($products, $offset, $per_page);
+
+    // Formulär för antal per sida
+?>
+    <form method="get" style="margin-bottom:15px;">
+        <input type="hidden" name="page" value="<?= esc_attr($_GET['page'] ?? '') ?>">
+        <label for="per_page">Produkter per sida:</label>
+        <input type="number" id="per_page" name="per_page" value="<?= esc_attr($per_page) ?>" min="1" max="100">
+        <button type="submit" class="button">Uppdatera</button>
+    </form>
+    <?php
+
+    echo '<table class="widefat striped nebf-products-table">
+        <thead>
+            <tr>
+                <th>Välj</th>
+                <th>Status</th>
+                <th>Bild</th>
+                <th>Namn</th>
+                <th>SKU</th>
+                <th>Varumärke</th>
+                <th>Kollektion</th>
+                <th>Pris</th>
+                <th>Lager</th>
+            </tr>
+        </thead>
+        <tbody>';
+
+    foreach ($products_page as $product):
+
+        // Är produkten redan importerad till Woo?
+        $existing = get_posts([
+            'post_type'  => 'product',
+            'meta_key'   => '_beautyfort_id',
+            'meta_value' => $product['bf_id'],
+            'fields'     => 'ids',
+        ]);
+
+        $is_imported = !empty($existing);
+
+        $image = !empty($product['thumbnail_url'])
+            ? '<img src="' . esc_url($product['thumbnail_url']) . '" width="50" height="50">'
+            : '—';
+    ?>
+
+        <tr class="<?= $is_imported ? 'is-imported' : ''; ?>">
+            <td>
+                <?php if ($is_imported): ?>
+                    —
+                <?php else: ?>
+                    <input type="checkbox" name="import_ids[]" value="<?= esc_attr($product['bf_id']); ?>">
+                <?php endif; ?>
+            </td>
+            <td><?= $is_imported ? '🟢' : '⚪'; ?></td>
+            <td><?= $image; ?></td>
+            <td><?= esc_html($product['fullname']); ?></td>
+            <td><?= esc_html($product['sku']); ?></td>
+            <td><?= esc_html($product['brand'] ?? '—'); ?></td>
+            <td><?= esc_html($product['collection'] ?? '—'); ?></td>
+            <td><?= function_exists('wc_price') ? wc_price($product['price']) : esc_html($product['price']); ?></td>
+            <td><?= esc_html($product['stock_level']); ?></td>
+        </tr>
+
+<?php endforeach;
+
+    echo '</tbody></table>';
+
+    // Föregående / Nästa navigering
+    if ($total_pages > 1) {
+        echo '<div class="tablenav"><div class="tablenav-pages">';
+
+        // Föregående
+        if ($page > 1) {
+            $prev_url = add_query_arg(['paged' => $page - 1, 'per_page' => $per_page]);
+            echo '<a class="page-numbers prev" href="' . esc_url($prev_url) . '">&laquo; Föregående</a> ';
+        }
+
+        // Nästa
+        if ($page < $total_pages) {
+            $next_url = add_query_arg(['paged' => $page + 1, 'per_page' => $per_page]);
+            echo '<a class="page-numbers next" href="' . esc_url($next_url) . '">Nästa &raquo;</a>';
+        }
+
+        echo '</div></div>';
+    }
+}

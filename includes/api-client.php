@@ -86,3 +86,22 @@ function nebf_api_request_stockfile()
 
     return $stockXml; // <-- detta gör admin-vyn möjlig
 }
+
+function nebf_test_api_connection()
+{
+    $stockXml = nebf_api_request_stockfile();
+
+    if (is_wp_error($stockXml)) {
+        return $stockXml;
+    }
+
+    // Räcker att verifiera att vi fick ett giltigt stockfile
+    if (!isset($stockXml->item)) {
+        return new WP_Error(
+            'invalid_stockfile',
+            'API svarade, men inget giltigt StockFile mottogs.'
+        );
+    }
+
+    return true;
+}
