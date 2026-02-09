@@ -2,68 +2,82 @@
 
 function nebf_import_products()
 {
-
-    if (!class_exists('WooCommerce')) {
-        return new WP_Error('no_wc', 'WooCommerce är inte aktivt');
-    }
-
     $rows = nebf_api_request_stockfile();
 
     if (is_wp_error($rows)) {
         return $rows;
     }
 
-    $imported = 0;
-    $updated  = 0;
+    if (empty($rows)) {
+        return 'Inga produkter inlästa!';
+    }
+
+    $products = [];
     $skipped  = 0;
 
-    if ($rows == null) return 'Inga produkter inläst!';
-
     foreach ($rows as $row) {
-
-        // 1. Validera
-        if (empty($row['sku'])) {
+        $row = json_decode(json_encode($row), true);
+        // Validera: StockCode är absolut minimum
+        if (empty($row['StockCode'])) {
+            error_log('NEBF: Skipping product with missing StockCode: ' . $row['StockCode']);
             $skipped++;
             continue;
         }
-        debug_log('Importerar produkt: ' . json_encode($row));
-        $sku   = sanitize_text_field($row['sku']);
-        $stock = intval($row['stock'] ?? 0);
-        $name  = sanitize_text_field($row['name'] ?? $sku);
 
-        // 2. Hitta produkt via SKU
-        $product_id = wc_get_product_id_by_sku($sku);
+        $bf_id = sanitize_text_field($row['StockCode']);
 
-        if ($product_id) {
-            $product = wc_get_product($product_id);
-            $updated++;
-        } else {
-            $product = new WC_Product_Simple();
-            $product->set_sku($sku);
-            $product->set_name($name);
-            $product->set_status('draft');
-            $imported++;
+        // StockLevel kan vara objekt, tomt eller nummer – normalisera
+        $stock = 0;
+        if (isset($row['StockLevel'])) {
+            if (is_numeric($row['StockLevel'])) {
+                $stock = intval($row['StockLevel']);
+            } elseif (is_array($row['StockLevel']) && isset($row['StockLevel']['Available'])) {
+                $stock = intval($row['StockLevel']['Available']);
+            }
         }
 
-        // 3. Lager
-        $product->set_manage_stock(true);
-        $product->set_stock_quantity($stock);
-        $product->set_stock_status(
-            $stock > 0 ? 'instock' : 'outofstock'
-        );
+        $raw_name = $row['FullName'] ?? '';
+        $brand    = $row['Brand'] ?? '';
 
-        // 4. Spara
-        $product->save();
-    }
+        $clean_name = nebf_clean_product_name($raw_name, $brand);
 
-    try {
-        return [
-            'imported' => $imported,
-            'updated'  => $updated,
-            'skipped'  => $skipped,
-            'total'    => count($rows)
+
+        $products[$bf_id] = [
+            'bf_id'       => $bf_id,
+            'sku'         => $bf_id, // BeautyFort använder StockCode som SKU
+            'stock_level' => $stock,
+            'price'       => isset($row['Price']) ? floatval($row['Price']) : 0,
+            // Rå API‑data sparad för fri åtkomst
+            'barcode'                   => $row['Barcode'] ?? '',
+            'brand'                     => $row['Brand'] ?? '',
+            'category'                  => $row['Category'] ?? '',
+            'collection'                => $row['Collection'] ?? '',
+            'description'               => $row['Description'] ?? '',
+            'fullname'                  => $clean_name,
+            'rawname'                    => $raw_name,
+            'gender'                    => $row['Gender'] ?? '',
+            'high_res_image_url'        => $row['HighResImageUrl'] ?? '',
+            'thumbnail_url' => $row['ThumbnailImageUrl'] ?? '',
+            'image_last_updated'        => $row['ImageLastUpdated'] ?? '',
+            'last_purchased_date'       => $row['LastPurchasedDate'] ?? '',
+            'last_purchased_price'      => $row['LastPurchasedPrice'] ?? '',
+            'size'                      => $row['Size'] ?? '',
+            'type'                      => $row['Type'] ?? '',
+            'your_rating'               => $row['YourRating'] ?? '',
+            'your_stock_code'           => $row['YourStockCode'] ?? '',
+            'raw'                       => $row, // alltid behåll rådata för debugg
         ];
-    } catch (Exception $e) {
-        return ['error' => $e];
     }
+
+    // Spara i cache i 1 timme
+    set_transient('nebf_beautyfort_products', $products, HOUR_IN_SECONDS);
+    error_log('NEBF cache count: ' . count($products));
+    error_log('NEBF skipped products: ' . $skipped);
+    error_log('Transient set: ' . (get_transient('nebf_beautyfort_products') ? 'YES' : 'NO'));
+
+    return [
+        'cached'  => count($products),
+        'skipped' => $skipped,
+        'total'   => count($rows),
+    ];
 }
