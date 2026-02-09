@@ -28,13 +28,28 @@ function nebf_api_request_stockfile()
             <bf:TestMode>' . $testmode . '</bf:TestMode>
             <bf:StockFileFormat>XML</bf:StockFileFormat>
             <bf:StockFileFields>
-                <bf:StockFileField>StockCode</bf:StockFileField>
-                <bf:StockFileField>FullName</bf:StockFileField>
-                <bf:StockFileField>Brand</bf:StockFileField>
-                <bf:StockFileField>Collection</bf:StockFileField>
-                <bf:StockFileField>Quantity</bf:StockFileField>
-                <bf:StockFileField>Price</bf:StockFileField>
-            </bf:StockFileFields>
+    <bf:StockFileField>Barcode</bf:StockFileField>
+    <bf:StockFileField>Brand</bf:StockFileField>
+    <bf:StockFileField>BreakBulkReference</bf:StockFileField>
+    <bf:StockFileField>Category</bf:StockFileField>
+    <bf:StockFileField>Collection</bf:StockFileField>
+    <bf:StockFileField>Description</bf:StockFileField>
+    <bf:StockFileField>FullName</bf:StockFileField>
+    <bf:StockFileField>Gender</bf:StockFileField>
+    <bf:StockFileField>HighResImageUrl</bf:StockFileField>
+    <bf:StockFileField>ImageLastUpdated</bf:StockFileField>
+    <bf:StockFileField>LastPurchasedDate</bf:StockFileField>
+    <bf:StockFileField>LastPurchasedPrice</bf:StockFileField>
+    <bf:StockFileField>Price</bf:StockFileField>
+    <bf:StockFileField>Quantity</bf:StockFileField>
+    <bf:StockFileField>Size</bf:StockFileField>
+    <bf:StockFileField>StockCode</bf:StockFileField>
+    <bf:StockFileField>StockLevel</bf:StockFileField>
+    <bf:StockFileField>ThumbnailImageUrl</bf:StockFileField>
+    <bf:StockFileField>Type</bf:StockFileField>
+    <bf:StockFileField>YourRating</bf:StockFileField>
+    <bf:StockFileField>YourStockCode</bf:StockFileField>
+</bf:StockFileFields>
             <bf:SortBy>FullName</bf:SortBy>
             <bf:StockFileEncoding>UTF-8</bf:StockFileEncoding>
         </bf:GetStockFileRequest>
@@ -65,35 +80,32 @@ function nebf_api_request_stockfile()
     $body = $soap->Body;
 
     $bf = $body->children($namespaces['ns1']);
-    $response = $bf->GetStockFileResponse;
+    $response = $bf->GetStockFileResponse ?? null;
 
-    $encodedFile = (string) $response->File;
-    $decodedXml = base64_decode($encodedFile);
-
-
-    if ($decodedXml === false) {
-        return new WP_Error(
-            'nebf_xml_error',
-            'Kunde inte tolka XML-svar från Beautyfort'
-        );
+if (!$response) {
+    // Om Fault finns, logga och returnera error
+    if (isset($bodyChildren->Fault)) {
+        error_log('BeautyFort SOAP Fault: ' . print_r($bodyChildren->Fault, true));
+        return new WP_Error('soap_fault', 'BeautyFort API returnerade ett fel.');
     }
 
-    $stockXml = simplexml_load_string($decodedXml);
-
-    if (!$stockXml) {
-        return new WP_Error('xml_error', 'Kunde inte läsa stockfile XML');
-    }
-
-    return $stockXml; // <-- detta gör admin-vyn möjlig
+    return new WP_Error('no_response', 'Hittade inget GetStockFileResponse i SOAP-svaret.');
 }
 
-function nebf_test_api_connection()
-{
-    $stockXml = nebf_api_request_stockfile();
+// Nu vet vi att File finns
+$encodedFile = (string) $response->File;
+$decodedXml = base64_decode($encodedFile, true);
 
-    if (is_wp_error($stockXml)) {
-        return $stockXml;
-    }
+if ($decodedXml === false) {
+    return new WP_Error('nebf_xml_error', 'Kunde inte dekoda Base64 XML från BeautyFort.');
+}
+
+$stockXml = simplexml_load_string($decodedXml);
+if (!$stockXml) {
+    return new WP_Error('xml_error', 'Kunde inte läsa stockfile XML.');
+}
+return $stockXml;
+
 
     // Räcker att verifiera att vi fick ett giltigt stockfile
     if (!isset($stockXml->item)) {

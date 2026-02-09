@@ -34,6 +34,19 @@ add_action('woocommerce_loaded', function () {
     require_once plugin_dir_path(__FILE__) . 'admin/admin-control-page.php';
     require_once plugin_dir_path(__FILE__) . 'admin/import-page.php';
 });
-?>
-<script type="text/javascript" src="<?php echo plugin_dir_url(__FILE__) . 'admin/js/admin.js'; ?>"></script>
-<?php
+
+add_action('admin_enqueue_scripts', function ($hook) {
+    // Ladda bara på din Beautyfort-sida
+    if ($hook !== 'woocommerce_page_nordic-equilibro-beautyfort') {
+        error_log('NEBF hook not found!');
+        return;
+    }
+
+    wp_enqueue_script(
+        'nebf-admin-accordion',
+        plugin_dir_url(__FILE__) . 'js/ne-beauty-woo-admin.js',
+        ['jquery'], // viktigt i admin
+        '1.0',
+        true
+    );
+});

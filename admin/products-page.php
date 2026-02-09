@@ -1,4 +1,15 @@
 <?php
+// Funktion för att hantera både strängar och array
+        function nebf_format_field($field) {
+            if (empty($field)) return '—';
+            if (is_array($field)) {
+                // Slå ihop med radbrytningar
+                return implode('<br>', array_map('esc_html', $field));
+            }
+            return esc_html($field);
+        }
+        
+
 function nebf_render_products_tab()
 {
     $products = get_transient('nebf_beautyfort_products');
@@ -16,7 +27,6 @@ function nebf_render_products_tab()
 
     // Sortera array
     usort($products, function ($a, $b) use ($orderby, $order) {
-        // Hantera status (importerad eller ej)
         if ($orderby === 'status') {
             $valA = !empty(get_posts(['post_type' => 'product', 'meta_key' => '_beautyfort_id', 'meta_value' => $a['bf_id'], 'fields' => 'ids'])) ? 1 : 0;
             $valB = !empty(get_posts(['post_type' => 'product', 'meta_key' => '_beautyfort_id', 'meta_value' => $b['bf_id'], 'fields' => 'ids'])) ? 1 : 0;
@@ -36,13 +46,11 @@ function nebf_render_products_tab()
 
     $total_products = count($products);
     $total_pages    = ceil($total_products / $per_page);
-
-    // Slice array för aktuell sida
     $offset = ($page - 1) * $per_page;
     $products_page = array_slice($products, $offset, $per_page);
 
     // Formulär för antal per sida
-?>
+    ?>
     <form method="get" style="margin-bottom:15px;">
         <input type="hidden" name="page" value="<?= esc_attr($_GET['page'] ?? '') ?>">
         <label for="per_page">Produkter per sida:</label>
@@ -51,11 +59,11 @@ function nebf_render_products_tab()
     </form>
     <?php
 
-    // Funktion för att skapa sorteringslänkar med indikator
+    // Sorteringslänkar
     function nebf_sort_link($column, $current_orderby, $current_order, $label)
     {
         $order = 'ASC';
-        $arrow = ' ⇅'; // Standardindikator för klickbara kolumner
+        $arrow = ' ⇅';
 
         if ($current_orderby === $column) {
             if ($current_order === 'ASC') {
@@ -71,7 +79,7 @@ function nebf_render_products_tab()
             'orderby' => $column,
             'order'   => $order,
             'paged'   => 1,
-            'per_page' => $_GET['per_page'] ?? 10,
+            'per_page'=> $_GET['per_page'] ?? 10,
         ]);
 
         return '<a href="' . esc_url($url) . '" style="text-decoration:none;">' . esc_html($label) . $arrow . '</a>';
@@ -93,7 +101,9 @@ function nebf_render_products_tab()
         </thead>
         <tbody>';
     foreach ($products_page as $index => $product):
-
+if(!empty($product['description'])){
+    error_log(print_r($product['description'], true));
+}
         $existing = get_posts([
             'post_type'  => 'product',
             'meta_key'   => '_beautyfort_id',
@@ -107,9 +117,8 @@ function nebf_render_products_tab()
             ? '<img src="' . esc_url($product['thumbnail_url']) . '" width="50" height="50">'
             : '—';
 
-        // Unik ID för accordion
         $accordion_id = 'accordion-' . $index;
-    ?>
+        ?>
 
         <!-- Huvudrad -->
         <tr class="product-row <?= $is_imported ? 'is-imported' : ''; ?>" data-accordion="<?= $accordion_id; ?>">
@@ -122,28 +131,42 @@ function nebf_render_products_tab()
             </td>
             <td><?= $is_imported ? '🟢' : '⚪'; ?></td>
             <td><?= $image; ?></td>
-            <td><?= esc_html($product['fullname']); ?></td>
-            <td><?= esc_html($product['sku']); ?></td>
+            <td><?= esc_html($product['fullname'] ?? '—'); ?></td>
+            <td><?= esc_html($product['sku'] ?? '—'); ?></td>
             <td><?= esc_html($product['brand'] ?? '—'); ?></td>
             <td><?= esc_html($product['collection'] ?? '—'); ?></td>
-            <td><?= function_exists('wc_price') ? wc_price($product['price']) : esc_html($product['price']); ?></td>
-            <td><?= esc_html($product['stock_level']); ?></td>
+            <td><?= function_exists('wc_price') ? wc_price($product['price'] ?? 0) : esc_html($product['price'] ?? '—'); ?></td>
+            <td><?= esc_html($product['stock_level'] ?? '—'); ?></td>
         </tr>
 
         <!-- Accordion-rad -->
-        <tr class="accordion-content" id="<?= $accordion_id; ?>" style="display:none;">
-            <td colspan="9" style="background:#f9f9f9;">
-                <strong>Beskrivning:</strong> <?= esc_html($product['description'] ?? '—'); ?><br>
-                <strong>EAN:</strong> <?= esc_html($product['ean'] ?? '—'); ?><br>
-                <strong>Volym:</strong> <?= esc_html($product['volume'] ?? '—'); ?><br>
-                <strong>Färg:</strong> <?= esc_html($product['color'] ?? '—'); ?><br>
-                <strong>Ingredienser:</strong> <?= esc_html($product['ingredients'] ?? '—'); ?><br>
-                <strong>Övrigt:</strong> <?= esc_html($product['extra_info'] ?? '—'); ?>
-            </td>
-        </tr>
+<tr class="accordion-content" id="<?= $accordion_id; ?>" style="display:none;">
+    <td colspan="9" style="background:#f9f9f9;">
+        <strong>Beskrivning:</strong> <?= nebf_format_field($product['description'] ?? null); ?><br>
+        <strong>EAN:</strong> <?= nebf_format_field($product['barcode'] ?? null); ?><br>
+        <strong>Volym:</strong> <?= nebf_format_field($product['size'] ?? null); ?><br>
+        <strong>Färg:</strong> <?= nebf_format_field($product['color'] ?? null); ?><br>
+        <strong>Ingredienser:</strong> <?= nebf_format_field($product['ingredients'] ?? null); ?><br>
+        <strong>Övrigt:</strong> <?= nebf_format_field($product['extra_info'] ?? null); ?><br>
 
-<?php endforeach;
+        <strong>Bild:</strong>
+        <?php if (!empty($product['high_res_image_url'])): ?>
+            <img src="<?= esc_url($product['high_res_image_url']); ?>" alt="<?= esc_attr($product['fullname']); ?>" style="max-width:150px;">
+        <?php elseif (!empty($product['thumbnail_url'])): ?>
+            <img src="<?= esc_url($product['thumbnail_url']); ?>" alt="<?= esc_attr($product['fullname']); ?>" style="max-width:100px;">
+        <?php else: ?>
+            — 
+        <?php endif; ?><br>
 
+        <strong>Senast köpt:</strong> <?= nebf_format_field($product['last_purchased_date'] ?? null); ?><br>
+        <strong>Senast pris:</strong> <?= nebf_format_field($product['last_purchased_price'] ?? null); ?><br>
+        <strong>BF ID:</strong> <?= nebf_format_field($product['bf_id'] ?? null); ?><br>
+        <strong>SKU:</strong> <?= nebf_format_field($product['sku'] ?? null); ?>
+    </td>
+</tr>
+
+
+    <?php endforeach;
 
     echo '</tbody></table>';
 
@@ -154,7 +177,7 @@ function nebf_render_products_tab()
         if ($page > 1) {
             $prev_url = add_query_arg([
                 'paged'   => $page - 1,
-                'per_page' => $per_page,
+                'per_page'=> $per_page,
                 'orderby' => $orderby,
                 'order'   => $order
             ]);
@@ -166,7 +189,7 @@ function nebf_render_products_tab()
         if ($page < $total_pages) {
             $next_url = add_query_arg([
                 'paged'   => $page + 1,
-                'per_page' => $per_page,
+                'per_page'=> $per_page,
                 'orderby' => $orderby,
                 'order'   => $order
             ]);
