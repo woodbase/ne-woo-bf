@@ -1,45 +1,49 @@
 jQuery(function ($) {
-  $('.nebf-products-table').on('click', '.product-row', function (e) {
-
-        // Klick på checkbox ska inte toggla
-        if ($(e.target).is('input')) {
-            return;
-        }
-
-        const accordionId = $(this).data('accordion');
-        const $row = $('#' + accordionId);
-
-        $row.toggle();
-    });
 
     /* =========================
-       ACCORDION (rad → detaljer)
+       ACCORDION (klick på huvudrad → visa/dölj detaljer)
        ========================= */
-    $('.nebf-row').on('click', function (e) {
-        if ($(e.target).is('input[type="checkbox"]')) return;
+    $(document).on('click', 'tr.product-row', function (e) {
+
+        // Ignorera klick på checkbox eller label
+        if ($(e.target).is('input[type="checkbox"], label')) return;
 
         const accId = $(this).data('accordion');
+        if (!accId) return;
+
+        // Göm alla andra accordion-rader
+        $('tr.accordion-row').not('#' + accId).hide();
+
+        // Toggle den klickade accordion-raden
         $('#' + accId).toggle();
     });
 
     /* =========================
        VÄLJ ALLA (ej importerade)
        ========================= */
-    $('#nebf-select-all').on('click', function (e) {
+    $(document).on('click', '#nebf-select-all', function (e) {
         e.preventDefault();
-
-        $('input[name="import_ids[]"]').prop('checked', true);
+        $('tr.product-row input[type="checkbox"]').prop('checked', true);
     });
 
     /* =========================
-       LIVE-SÖK (client side)
+       LIVE-SÖK (på huvudrader, påverkar ej öppna detaljer)
        ========================= */
-    $('#nebf-live-search').on('keyup', function () {
+    $(document).on('keyup', '#nebf-live-search', function () {
         const value = $(this).val().toLowerCase();
 
-        $('#nebf-products-table tbody tr.nebf-row').each(function () {
-            const rowText = $(this).text().toLowerCase();
-            $(this).toggle(rowText.indexOf(value) !== -1);
+        $('tr.product-row').each(function () {
+            const text = $(this).text().toLowerCase();
+            const accId = $(this).data('accordion');
+            const visible = text.indexOf(value) !== -1;
+
+            // Toggle huvudrad
+            $(this).toggle(visible);
+
+            // Om huvudrad döljs → göm även dess accordion
+            if (accId && !visible) {
+                $('#' + accId).hide();
+            }
         });
     });
 
