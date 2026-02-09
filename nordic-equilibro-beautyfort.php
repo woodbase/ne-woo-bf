@@ -56,7 +56,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
     // jQuery-baserad admin JS
     wp_enqueue_script(
         'nebf-products-tab',
-        $plugin_url . 'assets/js/products-tab.js',
+        $plugin_url . 'js/ne-beauty-woo-admin.js',
         ['jquery'],
         '1.1',
         true
@@ -65,7 +65,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
     // Admin CSS
     wp_enqueue_style(
         'nebf-admin-css',
-        $plugin_url . 'assets/css/admin.css',
+        $plugin_url . 'css/admin.css',
         [],
         '1.0'
     );
