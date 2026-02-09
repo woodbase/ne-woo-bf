@@ -66,7 +66,7 @@ function nebf_admin_page()
         if ($active_tab === 'settings') {
             nebf_render_settings_tab();
         } else {
-            nebf_render_products_tab();
+            nebf_render_products_page();
         }
         ?>
     </div>
