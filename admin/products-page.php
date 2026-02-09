@@ -1,14 +1,15 @@
 <?php
 // Funktion för att hantera både strängar och array
-        function nebf_format_field($field) {
-            if (empty($field)) return '—';
-            if (is_array($field)) {
-                // Slå ihop med radbrytningar
-                return implode('<br>', array_map('esc_html', $field));
-            }
-            return esc_html($field);
-        }
-        
+function nebf_format_field($field)
+{
+    if (empty($field)) return '—';
+    if (is_array($field)) {
+        // Slå ihop med radbrytningar
+        return implode('<br>', array_map('esc_html', $field));
+    }
+    return esc_html($field);
+}
+
 
 function nebf_render_products_tab()
 {
@@ -50,7 +51,7 @@ function nebf_render_products_tab()
     $products_page = array_slice($products, $offset, $per_page);
 
     // Formulär för antal per sida
-    ?>
+?>
     <form method="get" style="margin-bottom:15px;">
         <input type="hidden" name="page" value="<?= esc_attr($_GET['page'] ?? '') ?>">
         <label for="per_page">Produkter per sida:</label>
@@ -79,7 +80,7 @@ function nebf_render_products_tab()
             'orderby' => $column,
             'order'   => $order,
             'paged'   => 1,
-            'per_page'=> $_GET['per_page'] ?? 10,
+            'per_page' => $_GET['per_page'] ?? 10,
         ]);
 
         return '<a href="' . esc_url($url) . '" style="text-decoration:none;">' . esc_html($label) . $arrow . '</a>';
@@ -101,9 +102,9 @@ function nebf_render_products_tab()
         </thead>
         <tbody>';
     foreach ($products_page as $index => $product):
-if(!empty($product['description'])){
-    error_log(print_r($product['description'], true));
-}
+        if (!empty($product['description'])) {
+            error_log(print_r($product['description'], true));
+        }
         $existing = get_posts([
             'post_type'  => 'product',
             'meta_key'   => '_beautyfort_id',
@@ -118,7 +119,7 @@ if(!empty($product['description'])){
             : '—';
 
         $accordion_id = 'accordion-' . $index;
-        ?>
+    ?>
 
         <!-- Huvudrad -->
         <tr class="product-row <?= $is_imported ? 'is-imported' : ''; ?>" data-accordion="<?= $accordion_id; ?>">
@@ -131,7 +132,7 @@ if(!empty($product['description'])){
             </td>
             <td><?= $is_imported ? '🟢' : '⚪'; ?></td>
             <td><?= $image; ?></td>
-            <td><?= esc_html($product['fullname'] ?? '—'); ?></td>
+            <td><?= esc_html($product['fullname'] ?? '—'); ?><br /><span style="font-size:0.8em;color:#666;font-style:italic">(<?= esc_html($product['rawname'] ?? '—'); ?>)</span></td>
             <td><?= esc_html($product['sku'] ?? '—'); ?></td>
             <td><?= esc_html($product['brand'] ?? '—'); ?></td>
             <td><?= esc_html($product['collection'] ?? '—'); ?></td>
@@ -140,33 +141,33 @@ if(!empty($product['description'])){
         </tr>
 
         <!-- Accordion-rad -->
-<tr class="accordion-content" id="<?= $accordion_id; ?>" style="display:none;">
-    <td colspan="9" style="background:#f9f9f9;">
-        <strong>Beskrivning:</strong> <?= nebf_format_field($product['description'] ?? null); ?><br>
-        <strong>EAN:</strong> <?= nebf_format_field($product['barcode'] ?? null); ?><br>
-        <strong>Volym:</strong> <?= nebf_format_field($product['size'] ?? null); ?><br>
-        <strong>Färg:</strong> <?= nebf_format_field($product['color'] ?? null); ?><br>
-        <strong>Ingredienser:</strong> <?= nebf_format_field($product['ingredients'] ?? null); ?><br>
-        <strong>Övrigt:</strong> <?= nebf_format_field($product['extra_info'] ?? null); ?><br>
+        <tr class="accordion-content" id="<?= $accordion_id; ?>" style="display:none;">
+            <td colspan="9" style="background:#f9f9f9;">
+                <strong>Beskrivning:</strong> <?= nebf_format_field($product['description'] ?? null); ?><br>
+                <strong>EAN:</strong> <?= nebf_format_field($product['barcode'] ?? null); ?><br>
+                <strong>Volym:</strong> <?= nebf_format_field($product['size'] ?? null); ?><br>
+                <strong>Färg:</strong> <?= nebf_format_field($product['color'] ?? null); ?><br>
+                <strong>Ingredienser:</strong> <?= nebf_format_field($product['ingredients'] ?? null); ?><br>
+                <strong>Övrigt:</strong> <?= nebf_format_field($product['extra_info'] ?? null); ?><br>
 
-        <strong>Bild:</strong>
-        <?php if (!empty($product['high_res_image_url'])): ?>
-            <img src="<?= esc_url($product['high_res_image_url']); ?>" alt="<?= esc_attr($product['fullname']); ?>" style="max-width:150px;">
-        <?php elseif (!empty($product['thumbnail_url'])): ?>
-            <img src="<?= esc_url($product['thumbnail_url']); ?>" alt="<?= esc_attr($product['fullname']); ?>" style="max-width:100px;">
-        <?php else: ?>
-            — 
-        <?php endif; ?><br>
+                <strong>Bild:</strong>
+                <?php if (!empty($product['high_res_image_url'])): ?>
+                    <img src="<?= esc_url($product['high_res_image_url']); ?>" alt="<?= esc_attr($product['fullname']); ?>" style="max-width:150px;">
+                <?php elseif (!empty($product['thumbnail_url'])): ?>
+                    <img src="<?= esc_url($product['thumbnail_url']); ?>" alt="<?= esc_attr($product['fullname']); ?>" style="max-width:100px;">
+                <?php else: ?>
+                    —
+                <?php endif; ?><br>
 
-        <strong>Senast köpt:</strong> <?= nebf_format_field($product['last_purchased_date'] ?? null); ?><br>
-        <strong>Senast pris:</strong> <?= nebf_format_field($product['last_purchased_price'] ?? null); ?><br>
-        <strong>BF ID:</strong> <?= nebf_format_field($product['bf_id'] ?? null); ?><br>
-        <strong>SKU:</strong> <?= nebf_format_field($product['sku'] ?? null); ?>
-    </td>
-</tr>
+                <strong>Senast köpt:</strong> <?= nebf_format_field($product['last_purchased_date'] ?? null); ?><br>
+                <strong>Senast pris:</strong> <?= nebf_format_field($product['last_purchased_price'] ?? null); ?><br>
+                <strong>BF ID:</strong> <?= nebf_format_field($product['bf_id'] ?? null); ?><br>
+                <strong>SKU:</strong> <?= nebf_format_field($product['sku'] ?? null); ?>
+            </td>
+        </tr>
 
 
-    <?php endforeach;
+<?php endforeach;
 
     echo '</tbody></table>';
 
@@ -177,7 +178,7 @@ if(!empty($product['description'])){
         if ($page > 1) {
             $prev_url = add_query_arg([
                 'paged'   => $page - 1,
-                'per_page'=> $per_page,
+                'per_page' => $per_page,
                 'orderby' => $orderby,
                 'order'   => $order
             ]);
@@ -189,7 +190,7 @@ if(!empty($product['description'])){
         if ($page < $total_pages) {
             $next_url = add_query_arg([
                 'paged'   => $page + 1,
-                'per_page'=> $per_page,
+                'per_page' => $per_page,
                 'orderby' => $orderby,
                 'order'   => $order
             ]);

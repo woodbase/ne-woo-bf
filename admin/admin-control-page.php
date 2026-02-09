@@ -26,6 +26,17 @@ add_action('admin_init', function () {
             }
         ]
     );
+    register_setting(
+        'nebf_settings',
+        'nebf_strip_brand_from_name',
+        [
+            'type' => 'boolean',
+            'default' => true,
+            'sanitize_callback' => function ($value) {
+                return $value ? 1 : 0;
+            }
+        ]
+    );
 });
 
 /**

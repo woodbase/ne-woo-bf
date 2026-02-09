@@ -36,6 +36,12 @@ function nebf_import_products()
             }
         }
 
+        $raw_name = $row['FullName'] ?? '';
+        $brand    = $row['Brand'] ?? '';
+
+        $clean_name = nebf_clean_product_name($raw_name, $brand);
+
+
         $products[$bf_id] = [
             'bf_id'       => $bf_id,
             'sku'         => $bf_id, // BeautyFort använder StockCode som SKU
@@ -47,7 +53,8 @@ function nebf_import_products()
             'category'                  => $row['Category'] ?? '',
             'collection'                => $row['Collection'] ?? '',
             'description'               => $row['Description'] ?? '',
-            'fullname'                  => $row['FullName'] ?? '',
+            'fullname'                  => $clean_name,
+            'rawname'                    => $raw_name,
             'gender'                    => $row['Gender'] ?? '',
             'high_res_image_url'        => $row['HighResImageUrl'] ?? '',
             'thumbnail_url' => $row['ThumbnailImageUrl'] ?? '',

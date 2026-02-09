@@ -67,6 +67,22 @@ function nebf_render_settings_tab()
                         class="regular-text">
                 </td>
             </tr>
+            <tr>
+                <th scope="row">Produktnamn</th>
+                <td>
+                    <label>
+                        <input type="checkbox"
+                            name="nebf_strip_brand_from_name"
+                            value="1"
+                            <?php checked(1, get_option('nebf_strip_brand_from_name', 1)); ?>>
+                        Ta bort varumärke från produktnamn vid import
+                    </label>
+                    <p class="description">
+                        Om markerad tas varumärket bort från början av produktnamnet
+                        (t.ex. <em>Maria Åkerberg – Shea Balm</em> → <em>Shea Balm</em>).
+                    </p>
+                </td>
+            </tr>
 
             <tr>
                 <th scope="row">Test mode</th>

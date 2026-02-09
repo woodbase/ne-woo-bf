@@ -135,3 +135,18 @@ function nebf_get_wc_products($args = [])
 
     return $data;
 }
+
+function nebf_clean_product_name($name, $brand)
+{
+    $strip = get_option('nebf_strip_brand_from_name', 1);
+
+    if (!$strip || !$brand || !$name) {
+        return $name;
+    }
+
+    $patterns = [
+        '/^' . preg_quote($brand, '/') . '\s*[-–]?\s*/i',
+    ];
+
+    return trim(preg_replace($patterns, '', $name));
+}
