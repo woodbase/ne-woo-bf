@@ -17,6 +17,7 @@ add_action('admin_init', function () {
         'nebf_api_secret',
         ['sanitize_callback' => 'sanitize_text_field']
     );
+
     register_setting(
         'nebf_settings_group',
         'nebf_api_testmode',
@@ -26,6 +27,7 @@ add_action('admin_init', function () {
             }
         ]
     );
+
     register_setting(
         'nebf_settings',
         'nebf_strip_brand_from_name',
@@ -37,7 +39,21 @@ add_action('admin_init', function () {
             }
         ]
     );
+
+    register_setting(
+    'nebf_settings',
+    'nebf_cache_time',
+    [
+        'type' => 'integer',
+        'default' => 1, // default 1 timme
+        'sanitize_callback' => function($value) {
+            $value = intval($value);
+            return $value < -1 ? 1 : $value; // -1 = permanent, allt annat <0 blir 1 timme
+        }
+    ]
+);
 });
+
 
 /**
  * Rendera admin-sidan

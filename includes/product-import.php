@@ -70,7 +70,14 @@ function nebf_import_products()
     }
 
     // Spara i cache i 1 timme
-    set_transient('nebf_beautyfort_products', $products, HOUR_IN_SECONDS);
+    $hours = get_option('nebf_cache_time', 1);
+
+if ($hours === -1) {
+    set_transient('nebf_beautyfort_products', $products, 0); // 0 = permanent
+} else {
+    set_transient('nebf_beautyfort_products', $products, $hours * HOUR_IN_SECONDS);
+}
+
     error_log('NEBF cache count: ' . count($products));
     error_log('NEBF skipped products: ' . $skipped);
     error_log('Transient set: ' . (get_transient('nebf_beautyfort_products') ? 'YES' : 'NO'));

@@ -67,6 +67,20 @@ function nebf_render_settings_tab()
                         class="regular-text">
                 </td>
             </tr>
+<tr>
+    <th scope="row">Cache time (timmar)</th>
+    <td>
+        <input type="number"
+               name="nebf_cache_time"
+               value="<?php echo esc_attr(get_option('nebf_cache_time', 1)); ?>"
+               min="-1"
+               class="small-text">
+        <p class="description">
+            Hur länge produkterna ska cachas innan de hämtas på nytt från BeautyFort.<br>
+            Ange -1 för permanent cache.
+        </p>
+    </td>
+</tr>
             <tr>
                 <th scope="row">Produktnamn</th>
                 <td>

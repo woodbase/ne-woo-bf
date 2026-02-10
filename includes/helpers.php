@@ -170,7 +170,14 @@ function nebf_get_imported_bf_ids()
         'nopaging'   => true,
     ]);
 
-    set_transient('nebf_imported_bf_ids', $ids, HOUR_IN_SECONDS);
+    $hours = get_option('nebf_cache_time', 1);
+
+if ($hours === -1) {
+    set_transient('nebf_beautyfort_products', $products, 0); // 0 = permanent
+} else {
+    set_transient('nebf_beautyfort_products', $products, $hours * HOUR_IN_SECONDS);
+}
+
     return $ids;
 }
 
