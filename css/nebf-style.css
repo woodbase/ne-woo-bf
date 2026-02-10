@@ -1,19 +1,124 @@
-/* Hover-effekt på huvudrad */
+/* ===================================
+   NORDIC EQUILIBRO – PRODUKTSTABELL
+   =================================== */
+
+/* ------------------------------
+   HUVUDRADER
+   ------------------------------ */
 .nebf-products-table tr.product-row {
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Hover på huvudrad */
 .nebf-products-table tr.product-row:hover {
     background-color: #eef6ff;
 }
 
 /* Markerad rad (checkbox vald) */
 .nebf-products-table tr.product-row.is-selected {
-    background-color: #e6f4ea !important;
+    background: linear-gradient(90deg, #e6f4ea 0%, #f0f9f1 100%);
+    box-shadow: inset 4px 0 0 #46b450;
+}
+
+/* Öppen accordion / aktiv rad */
+.nebf-products-table tr.product-row.is-open {
+    background: linear-gradient(90deg, #e8f2ff 0%, #f3f8ff 100%);
+    box-shadow: inset 4px 0 0 #2271b1;
 }
 
 /* Extra tydlig vänsterkant */
-.nebf-products-table tr.product-row.is-selected td:first-child {
-    box-shadow: inset 4px 0 0 #46b450;
+.nebf-products-table tr.product-row.is-selected td:first-child,
+.nebf-products-table tr.product-row.is-open td:first-child {
+    border-left: 4px solid currentColor;
+}
+
+/* ------------------------------
+   ACCORDION-RADER
+   ------------------------------ */
+.nebf-inner-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    transition: background-color 0.2s ease;
+}
+
+.nebf-inner-table th {
+    width: 220px;
+    text-align: left;
+    padding: 8px 10px;
+    background: #f6f7f7;
+    font-weight: 600;
+    border-bottom: 1px solid #ddd;
+}
+
+.nebf-inner-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Accordion bakgrund */
+.accordion-row td {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+
+/* Små hover-effekter i inner-tabell */
+.accordion-row td:hover {
+    background-color: #f1f5f9;
+}
+
+/* ------------------------------
+   STATUS-PILLER
+   ------------------------------ */
+.status-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.status-active {
+    background: #e7f7ed;
+    color: #0a7d32;
+}
+
+.status-inactive {
+    background: #fdecea;
+    color: #b32d2e;
+}
+
+/* ------------------------------
+   EXPAND-KOLONN / PIL
+   ------------------------------ */
+.nebf-expand-col {
+    width: 36px;
+}
+
+.nebf-expand {
+    text-align: center;
+    color: #2271b1;
+    transition: transform 0.2s ease;
+}
+
+.nebf-product-row.is-open .nebf-expand span,
+.nebf-product-row.is-open .dashicons {
+    transform: rotate(180deg);
+}
+
+/* ------------------------------
+   EXTRA BONUS – ANIMATION PÅ MARKERAD RAD
+   ------------------------------ */
+.nebf-products-table tr.product-row.is-selected,
+.nebf-products-table tr.product-row.is-open {
+    animation: highlightFade 0.4s ease-in-out;
+}
+
+@keyframes highlightFade {
+    0%   { background-color: rgba(70,180,80,0.2); }
+    50%  { background-color: rgba(70,180,80,0.4); }
+    100% { background-color: transparent; }
 }

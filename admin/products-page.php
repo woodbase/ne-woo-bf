@@ -150,6 +150,7 @@ function nebf_render_products_page()
             <th><?= nebf_sort_link('collection', $orderby, $order, 'Kollektion'); ?></th>
             <th><?= nebf_sort_link('price', $orderby, $order, 'Pris'); ?></th>
             <th><?= nebf_sort_link('stock_level', $orderby, $order, 'Lager'); ?></th>
+            <th class="nebf-expand-col"></th> <!-- 👈 chevron-kolumn -->
         </tr>
     </thead>
     <tbody>
@@ -173,6 +174,9 @@ function nebf_render_products_page()
             <td><?= esc_html($product['collection'] ?? '—'); ?></td>
             <td><?= function_exists('wc_price') ? wc_price($product['price'] ?? 0) : esc_html($product['price'] ?? '—'); ?></td>
             <td><?= esc_html($product['stock_level'] ?? '—'); ?></td>
+            <td class="nebf-expand">
+    <span class="dashicons dashicons-arrow-down-alt2"></span>
+  </td>
         </tr>
 
         <tr id="<?= esc_attr($accordion_id); ?>" class="accordion-row" style="display:none;">
