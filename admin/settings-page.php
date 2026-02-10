@@ -1,13 +1,19 @@
 <?php
-
-/**
- * TAB: Inställningar
- */
 /**
  * TAB: Inställningar
  */
 function nebf_render_settings_tab()
 {
+    // Rensa cache manuellt
+if (isset($_POST['nebf_clear_cache'])) {
+    check_admin_referer('nebf_clear_cache_nonce');
+    delete_transient('nebf_beautyfort_products');
+
+    echo '<div class="notice notice-success"><p>';
+    echo 'Produktcachen har rensats.';
+    echo '</p></div>';
+}
+
     $last_fetch       = get_option('nebf_last_fetch');
     $last_fetch_count = get_option('nebf_last_fetch_count');
 
@@ -43,18 +49,18 @@ function nebf_render_settings_tab()
         }
     }
 ?>
-
     <form method="post" action="options.php">
         <?php settings_fields('nebf_settings_group'); ?>
 
         <table class="form-table">
+
             <tr>
                 <th>API Username</th>
                 <td>
                     <input type="text"
-                        name="nebf_api_username"
-                        value="<?php echo esc_attr(get_option('nebf_api_username')); ?>"
-                        class="regular-text">
+                           name="nebf_api_username"
+                           value="<?php echo esc_attr(get_option('nebf_api_username')); ?>"
+                           class="regular-text">
                 </td>
             </tr>
 
@@ -62,33 +68,35 @@ function nebf_render_settings_tab()
                 <th>API Secret</th>
                 <td>
                     <input type="password"
-                        name="nebf_api_secret"
-                        value="<?php echo esc_attr(get_option('nebf_api_secret')); ?>"
-                        class="regular-text">
+                           name="nebf_api_secret"
+                           value="<?php echo esc_attr(get_option('nebf_api_secret')); ?>"
+                           class="regular-text">
                 </td>
             </tr>
-<tr>
-    <th scope="row">Cache time (timmar)</th>
-    <td>
-        <input type="number"
-               name="nebf_cache_time"
-               value="<?php echo esc_attr(get_option('nebf_cache_time', 1)); ?>"
-               min="-1"
-               class="small-text">
-        <p class="description">
-            Hur länge produkterna ska cachas innan de hämtas på nytt från BeautyFort.<br>
-            Ange -1 för permanent cache.
-        </p>
-    </td>
-</tr>
+
+            <tr>
+                <th scope="row">Cache time (hours)</th>
+                <td>
+                    <input type="number"
+                           name="nebf_cache_time"
+                           value="<?php echo esc_attr(get_option('nebf_cache_time', 1)); ?>"
+                           min="-1"
+                           class="small-text">
+                    <p class="description">
+                        Hur länge produkterna ska cachas innan ny hämtning.<br>
+                        <strong>-1</strong> = permanent cache (hämtas endast manuellt).
+                    </p>
+                </td>
+            </tr>
+
             <tr>
                 <th scope="row">Produktnamn</th>
                 <td>
                     <label>
                         <input type="checkbox"
-                            name="nebf_strip_brand_from_name"
-                            value="1"
-                            <?php checked(1, get_option('nebf_strip_brand_from_name', 1)); ?>>
+                               name="nebf_strip_brand_from_name"
+                               value="1"
+                               <?php checked(1, get_option('nebf_strip_brand_from_name', 1)); ?>>
                         Ta bort varumärke från produktnamn vid import
                     </label>
                     <p class="description">
@@ -103,13 +111,14 @@ function nebf_render_settings_tab()
                 <td>
                     <label>
                         <input type="checkbox"
-                            name="nebf_api_testmode"
-                            value="1"
-                            <?php checked(get_option('nebf_api_testmode'), '1'); ?>>
+                               name="nebf_api_testmode"
+                               value="1"
+                               <?php checked(get_option('nebf_api_testmode'), '1'); ?>>
                         Använd testläge (sandbox)
                     </label>
                 </td>
             </tr>
+
         </table>
 
         <?php submit_button('Spara inställningar'); ?>
@@ -119,12 +128,18 @@ function nebf_render_settings_tab()
 
     <form method="post">
         <?php wp_nonce_field('nebf_import_nonce'); ?>
-        <input
-            type="submit"
-            name="nebf_import_products"
-            class="button button-primary"
-            value="Hämta produkter från BeautyFort">
+        <input type="submit"
+               name="nebf_import_products"
+               class="button button-primary"
+               value="Hämta produkter från BeautyFort">
     </form>
+<form method="post" style="margin-top:0.5em;">
+    <?php wp_nonce_field('nebf_clear_cache_nonce'); ?>
+    <input type="submit"
+           name="nebf_clear_cache"
+           class="button"
+           value="Rensa cache">
+</form>
 
     <?php if ($last_fetch): ?>
         <p>
@@ -133,15 +148,18 @@ function nebf_render_settings_tab()
             (<?php echo intval($last_fetch_count); ?> produkter)
         </p>
     <?php endif; ?>
+    <p>
+    <strong>Cache-status:</strong>
+    <?php echo esc_html(nebf_get_cache_status()); ?>
+</p>
+
 
     <form method="post" style="margin-top:1em;">
         <?php wp_nonce_field('nebf_test_api_nonce'); ?>
-        <input
-            type="submit"
-            name="nebf_test_api"
-            class="button"
-            value="Testa API-anslutning">
+        <input type="submit"
+               name="nebf_test_api"
+               class="button"
+               value="Testa API-anslutning">
     </form>
-
 <?php
 }

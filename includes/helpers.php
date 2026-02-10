@@ -212,3 +212,35 @@ function nebf_sort_link($column, $current_orderby, $current_order, $label)
 
     return '<a href="' . esc_url($url) . '">' . esc_html($label) . $arrow . '</a>';
 }
+
+function nebf_get_cache_status()
+{
+    $cache_time = (int) get_option('nebf_cache_time', 1);
+    $transient  = get_transient('nebf_beautyfort_products');
+
+    if ($cache_time === -1 && $transient !== false) {
+        return 'Permanent cache';
+    }
+
+    if ($transient === false) {
+        return 'Ingen cache';
+    }
+
+    // Hämta timeout för transient
+    $timeout = get_option('_transient_timeout_nebf_beautyfort_products');
+
+    if (!$timeout) {
+        return 'Ingen cache';
+    }
+
+    $remaining = $timeout - time();
+
+    if ($remaining <= 0) {
+        return 'Cache har löpt ut';
+    }
+
+    $hours = round($remaining / HOUR_IN_SECONDS, 1);
+
+    return 'Cache giltig i ca ' . $hours . ' h';
+}
+
