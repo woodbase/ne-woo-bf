@@ -65,7 +65,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
     // Admin CSS
     wp_enqueue_style(
         'nebf-admin-css',
-        $plugin_url . 'css/admin.css',
+        $plugin_url . 'css/nebf-style.css',
         [],
         '1.0'
     );

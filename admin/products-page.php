@@ -176,12 +176,60 @@ function nebf_render_products_page()
         </tr>
 
         <tr id="<?= esc_attr($accordion_id); ?>" class="accordion-row" style="display:none;">
-            <td colspan="9" style="background:#f9f9f9;">
-                <strong>Beskrivning:</strong> <?= nebf_format_field($product['description'] ?? null); ?><br>
-                <strong>EAN:</strong> <?= nebf_format_field($product['barcode'] ?? null); ?><br>
-                <strong>Ingredienser:</strong> <?= nebf_format_field($product['ingredients'] ?? null); ?>
-            </td>
-        </tr>
+    <td colspan="9" style="background:#f6f7f7; padding:16px;">
+
+        <table class="widefat striped" style="margin:0;">
+            <tbody>
+                <tr>
+                    <th style="width:180px;">Beskrivning</th>
+                    <td><?= nebf_format_field($product['description'] ?? null); ?></td>
+                </tr>
+                <tr>
+                    <th>EAN</th>
+                    <td><?= nebf_format_field($product['barcode'] ?? null); ?></td>
+                </tr>
+                <tr>
+                    <th>Ingredienser</th>
+                    <td><?= nebf_format_field($product['ingredients'] ?? null); ?></td>
+                </tr>
+                <tr>
+                    <th>Volym</th>
+                    <td><?= nebf_format_field($product['size'] ?? null); ?></td>
+                </tr>
+                <tr>
+                    <th>Färg</th>
+                    <td><?= nebf_format_field($product['color'] ?? null); ?></td>
+                </tr>
+                <tr>
+                    <th>Övrigt</th>
+                    <td><?= nebf_format_field($product['extra_info'] ?? null); ?></td>
+                </tr>
+                <tr>
+                    <th>BF-ID</th>
+                    <td><?= nebf_format_field($product['bf_id'] ?? null); ?></td>
+                </tr>
+                <tr>
+                    <th>SKU</th>
+                    <td><?= nebf_format_field($product['sku'] ?? null); ?></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top:12px;">
+            <strong>Bild</strong><br>
+            <?php if (!empty($product['high_res_image_url'])): ?>
+                <img src="<?= esc_url($product['high_res_image_url']); ?>" style="max-width:180px;">
+            <?php elseif (!empty($product['thumbnail_url'])): ?>
+                <img src="<?= esc_url($product['thumbnail_url']); ?>" style="max-width:120px;">
+            <?php else: ?>
+                —
+            <?php endif; ?>
+        </div>
+
+    </td>
+</tr>
+
+
         <?php endforeach; ?>
     </tbody>
 </table>

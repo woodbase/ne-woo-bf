@@ -1,0 +1,19 @@
+/* Hover-effekt på huvudrad */
+.nebf-products-table tr.product-row {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.nebf-products-table tr.product-row:hover {
+    background-color: #eef6ff;
+}
+
+/* Markerad rad (checkbox vald) */
+.nebf-products-table tr.product-row.is-selected {
+    background-color: #e6f4ea !important;
+}
+
+/* Extra tydlig vänsterkant */
+.nebf-products-table tr.product-row.is-selected td:first-child {
+    box-shadow: inset 4px 0 0 #46b450;
+}
