@@ -23,10 +23,11 @@ function nebf_render_products_page()
 
         $products = nebf_get_cached_products();
 
-        foreach ($_POST['selected_products'] as $sku) {
+        foreach ($_POST['selected_products'] as $bf_id) {
             foreach ($products as $product) {
-                if ($product['sku'] === $sku) {
-                    nebf_sync_product_to_woo($product);
+                if ($product['bf_id'] === $bf_id) {
+                    $sale_price = floatval($_POST['sale_prices'][$bf_id] ?? 0);
+                   nebf_sync_product_to_woo($product, $sale_price);
                 }
             }
         }
@@ -145,6 +146,7 @@ function nebf_render_products_page()
         <button class="button button-primary">Uppdatera</button>
         <button id="nebf-select-all" class="button">Välj alla</button>
     </form>
+    <form method="POST">
     <button type="submit" name="nebf_sync_selected" class="button button-primary">
         Synka till WooCommerce
     </button>
@@ -175,7 +177,7 @@ function nebf_render_products_page()
                     'meta_value' => $product['bf_id'],
                     'fields' => 'ids'
                 ]);
-                $is_imported = !empty($existing);
+                $is_imported = nebf_is_product_synced($product['sku']); //!empty($existing);
                 $accordion_id = 'acc-' . $i;
 
                 // --- Beräkna försäljningspris och marginal ---
@@ -187,7 +189,15 @@ function nebf_render_products_page()
                 $calc_margin = $cost_price > 0 ? round((($sale_price - $cost_price) / $cost_price) * 100, 2) : 0;
             ?>
                 <tr class="product-row" data-accordion="<?= esc_attr($accordion_id); ?>">
-                    <td><?= $is_imported ? '—' : '<input type="checkbox" value="' . esc_attr($product['bf_id']) . '">'; ?></td>
+                    <td>
+    <?php if (!$is_imported): ?>
+        <input type="checkbox" name="selected_products[]" value="<?= esc_attr($product['bf_id']); ?>">
+        <input type="hidden" name="sale_prices[<?= esc_attr($product['bf_id']); ?>]" value="<?= esc_attr($sale_price); ?>">
+    <?php else: ?>
+        —
+    <?php endif; ?>
+</td>
+
                     <td><?= $is_imported ? '🟢' : '⚪'; ?></td>
                     <td><?= !empty($product['thumbnail_url']) ? '<img src="' . esc_url($product['thumbnail_url']) . '" width="50">' : '—'; ?></td>
                     <td><?= esc_html($product['fullname'] ?? '—'); ?><br /><span style="font-size:0.8em;color:#666;font-style:italic">(<?= esc_html($product['rawname'] ?? '—'); ?>)</span></td>
@@ -255,7 +265,7 @@ function nebf_render_products_page()
     <button type="submit" name="nebf_sync_selected" class="button button-primary">
         Synka till WooCommerce
     </button>
-
+                            </form>
     <!-- PAGINATION -->
     <?php if ($total_pages > 1): ?>
         <div class="tablenav">

@@ -23,6 +23,7 @@ require_once $base_path . 'includes/images.php';
 require_once $base_path . 'includes/cron.php';
 require_once $base_path . 'includes/class-pricing-engine.php';
 require_once $base_path . 'includes/class-markup-calculator.php';
+require_once $base_path . 'includes/sync-to-woo.php';
 
 require_once $base_path . 'admin/admin-control-page.php';
 require_once $base_path . 'admin/import-page.php';
