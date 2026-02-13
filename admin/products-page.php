@@ -19,6 +19,22 @@ function nebf_render_products_page()
         return;
     }
 
+    if (isset($_POST['nebf_sync_selected'])) {
+
+        $products = nebf_get_cached_products();
+
+        foreach ($_POST['selected_products'] as $sku) {
+            foreach ($products as $product) {
+                if ($product['sku'] === $sku) {
+                    nebf_sync_product_to_woo($product);
+                }
+            }
+        }
+
+        echo '<div class="updated"><p>Produkter synkade till WooCommerce!</p></div>';
+    }
+
+
     // --- Pagination & sortering ---
     $per_page = isset($_GET['per_page']) ? max(1, (int) $_GET['per_page']) : 100;
     $page     = isset($_GET['paged']) ? max(1, (int) $_GET['paged']) : 1;
@@ -129,7 +145,9 @@ function nebf_render_products_page()
         <button class="button button-primary">Uppdatera</button>
         <button id="nebf-select-all" class="button">Välj alla</button>
     </form>
-
+    <button type="submit" name="nebf_sync_selected" class="button button-primary">
+        Synka till WooCommerce
+    </button>
     <!-- ========================= -->
     <!-- PRODUKTTABELL -->
     <table class="widefat striped nebf-products-table">
@@ -234,10 +252,23 @@ function nebf_render_products_page()
             <?php endforeach; ?>
         </tbody>
     </table>
+    <button type="submit" name="nebf_sync_selected" class="button button-primary">
+        Synka till WooCommerce
+    </button>
 
+    <!-- PAGINATION -->
     <?php if ($total_pages > 1): ?>
         <div class="tablenav">
-            <div class="tablenav-pages">Sida <?= $page ?> av <?= $total_pages ?></div>
+            <div class="tablenav-pages">
+                <?= paginate_links([
+                    'base' => add_query_arg(array_merge($_GET, ['paged' => '%#%'])),
+                    'format' => '',
+                    'current' => $page,
+                    'total' => $total_pages,
+                    'prev_text' => '«',
+                    'next_text' => '»'
+                ]) ?>
+            </div>
         </div>
     <?php endif; ?>
 <?php
