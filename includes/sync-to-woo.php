@@ -35,7 +35,7 @@ function nebf_sync_product_to_woo($product, $sale_price) {
     if (!class_exists('WC_Product_Simple')) {
         return new WP_Error('no_wc', 'WooCommerce is not active');
     }
-
+$test_mode = get_option('nebf_api_testmode', '0') === '1';
     /* ------------------------------------------------------------
      * 1. Extract and sanitize product data
      * ------------------------------------------------------------ */
@@ -43,7 +43,11 @@ function nebf_sync_product_to_woo($product, $sale_price) {
     $name       = sanitize_text_field($product['fullname'] ?? '');
     $cost_price = floatval($product['price'] ?? 0);
     $stock      = intval($product['stock_level'] ?? 0);
-    $image_url  = esc_url_raw($product['high_res_image_url'] ?? '');
+    if ($test_mode) {
+    $image_url = $product['thumbnail_url'] ?? '';
+} else {
+    $image_url  = esc_url_raw($product['high_res_image_url'] ?? $product['thumbnail_url']);
+}
     $brand      = sanitize_text_field($product['brand'] ?? '');
 
     if (empty($sku) || empty($name)) {
@@ -117,49 +121,86 @@ function nebf_sync_product_to_woo($product, $sale_price) {
 }
 
 /**
- * Download an external image and attach it as the product's featured image.
+ * Download and attach an external image to a WooCommerce product.
  *
- * - Prevents duplicate downloads by checking if the image URL is already attached
- * - Uses WooCommerce/WordPress media functions for proper handling
- * - Sets the image as the product's featured image
+ * Handles URLs without file extensions (like BeautyFort), forces JPG if needed,
+ * and prevents duplicate downloads by storing original URL in attachment meta.
  *
- * @param string $image_url URL of the external image
- * @param int    $product_id WooCommerce product ID
+ * @param string $image_url URL of the image to download.
+ * @param int    $product_id WooCommerce product ID.
  */
 function nebf_attach_image_from_url($image_url, $product_id) {
+
     if (empty($image_url)) return;
 
-    // Load required WP files for media handling
     require_once ABSPATH . 'wp-admin/includes/file.php';
     require_once ABSPATH . 'wp-admin/includes/media.php';
     require_once ABSPATH . 'wp-admin/includes/image.php';
 
-    // Check if this image has already been downloaded to avoid duplicates
+    // Check if image has already been downloaded
     $existing = get_posts([
         'post_type'  => 'attachment',
         'meta_key'   => '_nebf_image_url',
         'meta_value' => $image_url,
-        'fields'     => 'ids',
-        'numberposts'=> 1,
+        'fields'     => 'ids'
     ]);
 
     if (!empty($existing)) {
-        // If already exists, just assign it as featured image
         set_post_thumbnail($product_id, $existing[0]);
         return;
     }
 
-    // Download image and attach it to the product
-    $attachment_id = media_sideload_image($image_url, $product_id, null, 'id');
+    // Decode URL and download image to temp file
+    $decoded_url = urldecode($image_url);
+    $tmp = download_url($decoded_url);
 
-    if (!is_wp_error($attachment_id)) {
-        // Save original URL to attachment meta for future checks
-        update_post_meta($attachment_id, '_nebf_image_url', $image_url);
-
-        // Assign the downloaded image as the product's featured image
-        set_post_thumbnail($product_id, $attachment_id);
+    if (is_wp_error($tmp)) {
+        error_log('NEBF: download_url failed: ' . $tmp->get_error_message());
+        return;
     }
+
+    // Attempt to detect image type
+    $mime = '';
+    $ext  = 'jpg'; // default fallback
+
+    $img_info = @getimagesize($tmp);
+    if ($img_info && !empty($img_info['mime'])) {
+        $mime = $img_info['mime'];
+        switch ($mime) {
+            case 'image/jpeg':
+                $ext = 'jpg';
+                break;
+            case 'image/png':
+                $ext = 'png';
+                break;
+            case 'image/gif':
+                $ext = 'gif';
+                break;
+        }
+    }
+
+    // Prepare file array for sideload
+    $file_array = [
+        'name'     => 'product-' . $product_id . '.' . $ext,
+        'tmp_name' => $tmp
+    ];
+
+    // Sideload the image
+    $attachment_id = media_handle_sideload($file_array, $product_id);
+
+    if (is_wp_error($attachment_id)) {
+        @unlink($tmp); // Clean up temp file
+        error_log('NEBF: media_handle_sideload failed: ' . $attachment_id->get_error_message());
+        return;
+    }
+
+    // Store original URL as meta and set as featured image
+    update_post_meta($attachment_id, '_nebf_image_url', $image_url);
+    set_post_thumbnail($product_id, $attachment_id);
+
+    error_log('NEBF: Image attached successfully, attachment ID ' . $attachment_id);
 }
+
 
 /**
  * Assign a global "Brand" attribute to a WooCommerce product.
