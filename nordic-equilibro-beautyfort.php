@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name: Nordic Equilibro – Beauty Fort WooCommerce Integration
- * Description: Intern integration för att synka produkter från Beauty Fort till WooCommerce.
+ * Description: Internal integration to sync products from Beauty Fort to WooCommerce.
  * Version: 0.0.4
  * Author: Nordic Equilibro
  * Text Domain: nordic-equilibro-beautyfort
@@ -11,7 +11,7 @@
 if (!defined('ABSPATH')) exit;
 
 // ==========================
-// LADDAR ALLA PHP-FILER
+// LOAD ALL PHP FILES
 // ==========================
 $base_path = plugin_dir_path(__FILE__);
 
@@ -23,6 +23,7 @@ require_once $base_path . 'includes/images.php';
 require_once $base_path . 'includes/cron.php';
 require_once $base_path . 'includes/class-pricing-engine.php';
 require_once $base_path . 'includes/class-markup-calculator.php';
+require_once $base_path . 'includes/sync-to-woo.php';
 
 require_once $base_path . 'admin/admin-control-page.php';
 require_once $base_path . 'admin/import-page.php';
@@ -30,7 +31,7 @@ require_once $base_path . 'admin/products-page.php';
 require_once $base_path . 'admin/settings-action.php';
 
 // ==========================
-// ADMIN-MENY
+// ADMIN MENU
 // ==========================
 add_action('admin_menu', function () {
     add_submenu_page(
@@ -52,6 +53,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
 
     $plugin_url = plugin_dir_url(__FILE__);
 
+    // Admin JS for products tab
     wp_enqueue_script(
         'nebf-products-tab',
         $plugin_url . 'js/ne-beauty-woo-admin.js',
@@ -60,6 +62,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
         true
     );
 
+    // Admin CSS
     wp_enqueue_style(
         'nebf-admin-css',
         $plugin_url . 'css/nebf-style.css',
@@ -68,12 +71,14 @@ add_action('admin_enqueue_scripts', function ($hook) {
     );
 });
 
-
 // ==========================
 // DEFAULT SETTINGS
 // ==========================
 register_activation_hook(__FILE__, 'nebf_set_default_pricing_settings');
 
+/**
+ * Set default pricing settings on plugin activation.
+ */
 function nebf_set_default_pricing_settings()
 {
     if (!get_option('nebf_pricing_settings')) {
@@ -85,11 +90,16 @@ function nebf_set_default_pricing_settings()
     }
 }
 
+// ==========================
+// AJAX: Save inline price or margin
+// ==========================
 add_action('wp_ajax_nebf_save_inline_price', 'nebf_save_inline_price');
 
+/**
+ * Handles inline price or margin updates from admin.
+ */
 function nebf_save_inline_price()
 {
-
     $bf_id = sanitize_text_field($_POST['bf_id']);
     $value = floatval($_POST['value']);
     $type  = sanitize_text_field($_POST['type']);
@@ -97,14 +107,15 @@ function nebf_save_inline_price()
     if (!$bf_id) wp_send_json_error();
 
     if ($type === 'price') {
-
+        // Save overridden price for the product
         update_option('nebf_price_override_' . $bf_id, $value);
 
         wp_send_json_success([
             'formatted_price' => function_exists('wc_price') ? wc_price($value) : $value
         ]);
-    } elseif ($type === 'margin') {
 
+    } elseif ($type === 'margin') {
+        // Save overridden margin for the product
         update_option('nebf_margin_override_' . $bf_id, $value);
 
         wp_send_json_success([
@@ -114,3 +125,15 @@ function nebf_save_inline_price()
 
     wp_send_json_error();
 }
+
+// ==========================
+// MATERIAL ICONS
+// ==========================
+/**
+ * Enqueue Material Icons for admin pages.
+ */
+function nebf_enqueue_material_icons($hook) {
+    if ($hook !== 'toplevel_page_nordic_equilibro_beautyfort') return;
+    wp_enqueue_style('material-icons', 'https://fonts.googleapis.com/icon?family=Material+Icons');
+}
+add_action('admin_enqueue_scripts', 'nebf_enqueue_material_icons');

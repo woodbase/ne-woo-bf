@@ -19,6 +19,23 @@ function nebf_render_products_page()
         return;
     }
 
+    if (isset($_POST['nebf_sync_selected'])) {
+
+        $products = nebf_get_cached_products();
+
+        foreach ($_POST['selected_products'] as $bf_id) {
+            foreach ($products as $product) {
+                if ($product['bf_id'] === $bf_id) {
+                    $sale_price = floatval($_POST['sale_prices'][$bf_id] ?? 0);
+                   nebf_sync_product_to_woo($product, $sale_price);
+                }
+            }
+        }
+
+        echo '<div class="updated"><p>Produkter synkade till WooCommerce!</p></div>';
+    }
+
+
     // --- Pagination & sortering ---
     $per_page = isset($_GET['per_page']) ? max(1, (int) $_GET['per_page']) : 100;
     $page     = isset($_GET['paged']) ? max(1, (int) $_GET['paged']) : 1;
@@ -129,7 +146,10 @@ function nebf_render_products_page()
         <button class="button button-primary">Uppdatera</button>
         <button id="nebf-select-all" class="button">Välj alla</button>
     </form>
-
+    <form method="POST">
+    <button type="submit" name="nebf_sync_selected" class="button button-primary">
+        Synka till WooCommerce
+    </button>
     <!-- ========================= -->
     <!-- PRODUKTTABELL -->
     <table class="widefat striped nebf-products-table">
@@ -157,7 +177,7 @@ function nebf_render_products_page()
                     'meta_value' => $product['bf_id'],
                     'fields' => 'ids'
                 ]);
-                $is_imported = !empty($existing);
+                $is_imported = nebf_is_product_synced($product['sku']); //!empty($existing);
                 $accordion_id = 'acc-' . $i;
 
                 // --- Beräkna försäljningspris och marginal ---
@@ -169,8 +189,20 @@ function nebf_render_products_page()
                 $calc_margin = $cost_price > 0 ? round((($sale_price - $cost_price) / $cost_price) * 100, 2) : 0;
             ?>
                 <tr class="product-row" data-accordion="<?= esc_attr($accordion_id); ?>">
-                    <td><?= $is_imported ? '—' : '<input type="checkbox" value="' . esc_attr($product['bf_id']) . '">'; ?></td>
-                    <td><?= $is_imported ? '🟢' : '⚪'; ?></td>
+                    <td>
+    <input type="checkbox" 
+           name="selected_products[]" 
+           value="<?= esc_attr($product['bf_id']); ?>" >
+    <input type="hidden" name="sale_prices[<?= esc_attr($product['bf_id']); ?>]" value="<?= esc_attr($sale_price); ?>">
+</td>
+                    <td>
+    <?php if ($is_imported): ?>
+        <span title="Synkad till Woocommerce" class="material-icons" style="color:green;">check_circle</span>
+    <?php else: ?>
+        <span title="Inte synkad till Woocommerce" class="material-icons" style="color:gray;">radio_button_unchecked</span>
+    <?php endif; ?>
+</td>
+
                     <td><?= !empty($product['thumbnail_url']) ? '<img src="' . esc_url($product['thumbnail_url']) . '" width="50">' : '—'; ?></td>
                     <td><?= esc_html($product['fullname'] ?? '—'); ?><br /><span style="font-size:0.8em;color:#666;font-style:italic">(<?= esc_html($product['rawname'] ?? '—'); ?>)</span></td>
                     <td><?= esc_html($product['sku'] ?? '—'); ?></td>
@@ -234,10 +266,23 @@ function nebf_render_products_page()
             <?php endforeach; ?>
         </tbody>
     </table>
-
+    <button type="submit" name="nebf_sync_selected" class="button button-primary">
+        Synka till WooCommerce
+    </button>
+                            </form>
+    <!-- PAGINATION -->
     <?php if ($total_pages > 1): ?>
         <div class="tablenav">
-            <div class="tablenav-pages">Sida <?= $page ?> av <?= $total_pages ?></div>
+            <div class="tablenav-pages">
+                <?= paginate_links([
+                    'base' => add_query_arg(array_merge($_GET, ['paged' => '%#%'])),
+                    'format' => '',
+                    'current' => $page,
+                    'total' => $total_pages,
+                    'prev_text' => '«',
+                    'next_text' => '»'
+                ]) ?>
+            </div>
         </div>
     <?php endif; ?>
 <?php
