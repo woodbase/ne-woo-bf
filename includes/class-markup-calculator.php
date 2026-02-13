@@ -1,7 +1,8 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-class NEBF_Markup_Calculator {
+class NEBF_Markup_Calculator
+{
 
     /**
      * Beräkna slutpris från cost price + margin + rounding
@@ -11,7 +12,8 @@ class NEBF_Markup_Calculator {
      * @param string $rounding 'none'|'99'|'9'|'whole'
      * @return float
      */
-    public static function calculate($cost_price, $margin, $rounding = 'none') {
+    public static function calculate($cost_price, $margin, $rounding = 'none')
+    {
 
         $price = self::apply_markup($cost_price, $margin);
         $price = self::apply_rounding($price, $rounding);
@@ -22,7 +24,8 @@ class NEBF_Markup_Calculator {
     /**
      * Lägg på markup
      */
-    private static function apply_markup($cost_price, $margin) {
+    private static function apply_markup($cost_price, $margin)
+    {
         $type  = $margin['type'] ?? 'percent';
         $value = floatval($margin['value'] ?? 0);
 
@@ -37,13 +40,18 @@ class NEBF_Markup_Calculator {
     /**
      * Avrunda pris enligt inställning
      */
-    private static function apply_rounding($price, $rounding) {
+    private static function apply_rounding($price, $rounding)
+    {
         switch ($rounding) {
-            case '99': return ceil($price) - 0.01;
-            case '9':  return ceil($price / 10) * 10 - 1;
-            case 'whole': return round($price);
+            case '99':
+                return ceil($price) - 0.01;
+            case '9':
+                return ceil($price / 10) * 10 - 1;
+            case 'whole':
+                return round($price);
             case 'none':
-            default: return $price;
+            default:
+                return $price;
         }
     }
 }

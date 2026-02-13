@@ -2,6 +2,9 @@
 if (!defined('ABSPATH')) exit;
 require_once plugin_dir_path(__FILE__) . 'products-page.php';
 require_once plugin_dir_path(__FILE__) . 'settings-page.php';
+require_once plugin_dir_path(__FILE__) . 'pricing-page.php';
+require_once plugin_dir_path(__FILE__) . 'pricing-actions.php';
+
 /**
  * Registrera inställningar
  */
@@ -57,16 +60,24 @@ function nebf_admin_page()
                 class="nav-tab <?php echo $active_tab === 'products' ? 'nav-tab-active' : ''; ?>">
                 Produkter
             </a>
-
+            <a href="<?php echo esc_url($base_url . '&tab=pricing'); ?>"
+                class="nav-tab <?php echo $active_tab === 'pricing' ? 'nav-tab-active' : ''; ?>">
+                Pricing
+            </a>
             <a href="<?php echo esc_url($base_url . '&tab=settings'); ?>"
                 class="nav-tab <?php echo $active_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
                 Inställningar
             </a>
         </h2>
-
         <?php
-        if ($active_tab === 'settings') {
-            nebf_render_settings_tab();
+        $tabs = [
+            'products' => 'nebf_render_products_page',
+            'settings' => 'nebf_render_settings_tab',
+            'pricing'  => 'nebf_render_pricing_tab',
+        ];
+
+        if (array_key_exists($active_tab, $tabs)) {
+            call_user_func($tabs[$active_tab]);
         } else {
             nebf_render_products_page();
         }

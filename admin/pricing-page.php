@@ -10,7 +10,25 @@ function nebf_render_pricing_tab()
         'rounding'      => 'none',
     ]);
 
-    settings_errors('nebf_pricing');
+    // SAVE
+    if (isset($_POST['nebf_save_pricing'])) {
+        check_admin_referer('nebf_pricing_nonce');
+
+        update_option('nebf_pricing_settings', [
+            'default_type'  => sanitize_text_field($_POST['default_type']),
+            'default_value' => floatval($_POST['default_value']),
+            'rounding'      => sanitize_text_field($_POST['rounding']),
+        ]);
+
+        echo '<div class="updated"><p>Pricing settings saved.</p></div>';
+    }
+
+    // RECALCULATE
+    if (isset($_POST['nebf_recalculate_all'])) {
+        NEBF_Pricing_Engine::recalculate_all_products();
+        echo '<div class="updated"><p>All product prices recalculated.</p></div>';
+    }
+
 ?>
 
     <h2>Pricing Settings</h2>
@@ -23,12 +41,8 @@ function nebf_render_pricing_tab()
                 <th>Global Margin</th>
                 <td>
                     <select name="default_type">
-                        <option value="percent" <?php selected($settings['default_type'], 'percent'); ?>>
-                            Percent (%)
-                        </option>
-                        <option value="fixed" <?php selected($settings['default_type'], 'fixed'); ?>>
-                            Fixed (SEK)
-                        </option>
+                        <option value="percent" <?php selected($settings['default_type'], 'percent'); ?>>Percent (%)</option>
+                        <option value="fixed" <?php selected($settings['default_type'], 'fixed'); ?>>Fixed (SEK)</option>
                     </select>
 
                     <input type="number"

@@ -1,14 +1,16 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-class NEBF_Pricing_Engine {
+class NEBF_Pricing_Engine
+{
 
     /*
     |--------------------------------------------------------------------------
     | Beräkna pris för en produkt
     |--------------------------------------------------------------------------
     */
-    public static function calculate_price($product_id, $cost_price) {
+    public static function calculate_price($product_id, $cost_price)
+    {
         $cost_price = floatval($cost_price);
         if ($cost_price <= 0) return 0;
 
@@ -23,7 +25,8 @@ class NEBF_Pricing_Engine {
     | Hämta margin-data (override eller global)
     |--------------------------------------------------------------------------
     */
-    public static function get_margin_data($product_id) {
+    public static function get_margin_data($product_id)
+    {
         $override_enabled = get_post_meta($product_id, '_nebf_margin_override_enabled', true);
 
         if ($override_enabled === 'yes') {
@@ -41,7 +44,8 @@ class NEBF_Pricing_Engine {
     | Global margin
     |--------------------------------------------------------------------------
     */
-    public static function get_global_margin() {
+    public static function get_global_margin()
+    {
         $settings = self::get_settings();
 
         return [
@@ -55,7 +59,8 @@ class NEBF_Pricing_Engine {
     | Recalculate en produkt
     |--------------------------------------------------------------------------
     */
-    public static function recalculate_product($product_id) {
+    public static function recalculate_product($product_id)
+    {
         $product = wc_get_product($product_id);
         if (!$product) return false;
 
@@ -74,7 +79,8 @@ class NEBF_Pricing_Engine {
     | Recalculate alla produkter
     |--------------------------------------------------------------------------
     */
-    public static function recalculate_all_products() {
+    public static function recalculate_all_products()
+    {
         $args = [
             'post_type'      => 'product',
             'posts_per_page' => -1,
@@ -93,7 +99,8 @@ class NEBF_Pricing_Engine {
     | Hämta inställningar (global)
     |--------------------------------------------------------------------------
     */
-    public static function get_settings() {
+    public static function get_settings()
+    {
         $defaults = [
             'default_type'  => 'percent',
             'default_value' => 30,
