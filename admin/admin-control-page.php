@@ -39,28 +39,7 @@ add_action('admin_init', function () {
             }
         ]
     );
-
-register_setting(
-    'nebf_settings_group',
-    'nebf_cache_time',
-    [
-        'type' => 'integer',
-        'default' => 1,
-        'sanitize_callback' => function ($value) {
-            $value = intval($value);
-            return ($value < -1) ? 1 : $value;
-        }
-    ]
-);
 });
-
-add_action('update_option_nebf_cache_time', function ($old, $new) {
-    if ($old !== $new) {
-        delete_transient('nebf_beautyfort_products');
-    }
-}, 10, 2);
-
-
 
 /**
  * Rendera admin-sidan

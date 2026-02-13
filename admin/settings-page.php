@@ -1,54 +1,31 @@
 <?php
-/**
- * TAB: Inställningar
- */
 function nebf_render_settings_tab()
 {
-    // Rensa cache manuellt
-if (isset($_POST['nebf_clear_cache'])) {
-    check_admin_referer('nebf_clear_cache_nonce');
-    delete_transient('nebf_beautyfort_products');
-
-    echo '<div class="notice notice-success"><p>';
-    echo 'Produktcachen har rensats.';
-    echo '</p></div>';
-}
-
     $last_fetch       = get_option('nebf_last_fetch');
     $last_fetch_count = get_option('nebf_last_fetch_count');
 
-    // Test API
-    if (isset($_POST['nebf_test_api'])) {
-        check_admin_referer('nebf_test_api_nonce');
-        $result = nebf_test_api_connection();
+    // Visa notices efter redirect
+    if (isset($_GET['nebf_notice'])) {
+        $type = $_GET['nebf_notice'] === 'success'
+            ? 'notice-success'
+            : 'notice-error';
 
-        $test = !is_wp_error($result);
+        $message = '';
 
-        echo '<div class="notice ' . ($test ? 'notice-success' : 'notice-error') . '"><p>';
-        echo esc_html($test ? 'API-anslutning OK' : $result->get_error_message());
-        echo '</p></div>';
-    }
-
-    // Hämta produkter (cache)
-    if (isset($_POST['nebf_import_products'])) {
-        check_admin_referer('nebf_import_nonce');
-
-        $result = nebf_import_products();
-
-        if (is_wp_error($result)) {
-            echo '<div class="notice notice-error"><p>' .
-                esc_html($result->get_error_message()) .
-                '</p></div>';
-        } else {
-            update_option('nebf_last_fetch', current_time('mysql'));
-            update_option('nebf_last_fetch_count', $result['total']);
-
-            echo '<div class="notice notice-success"><p>';
-            echo intval($result['total']) . ' produkter hämtades från BeautyFort och är redo för urval.';
-            echo '</p></div>';
+        if (isset($_GET['imported'])) {
+            $message = intval($_GET['imported']) . ' produkter importerades.';
         }
+
+        if (isset($_GET['message'])) {
+            $message = sanitize_text_field($_GET['message']);
+        }
+
+        echo '<div class="notice ' . esc_attr($type) . '"><p>' .
+            esc_html($message) .
+            '</p></div>';
     }
-?>
+    ?>
+
     <form method="post" action="options.php">
         <?php settings_fields('nebf_settings_group'); ?>
 
@@ -71,21 +48,6 @@ if (isset($_POST['nebf_clear_cache'])) {
                            name="nebf_api_secret"
                            value="<?php echo esc_attr(get_option('nebf_api_secret')); ?>"
                            class="regular-text">
-                </td>
-            </tr>
-
-            <tr>
-                <th scope="row">Cache time (hours)</th>
-                <td>
-                    <input type="number"
-                           name="nebf_cache_time"
-                           value="<?php echo esc_attr(get_option('nebf_cache_time', 1)); ?>"
-                           min="-1"
-                           class="small-text">
-                    <p class="description">
-                        Hur länge produkterna ska cachas innan ny hämtning.<br>
-                        <strong>-1</strong> = permanent cache (hämtas endast manuellt).
-                    </p>
                 </td>
             </tr>
 
@@ -128,18 +90,11 @@ if (isset($_POST['nebf_clear_cache'])) {
 
     <form method="post">
         <?php wp_nonce_field('nebf_import_nonce'); ?>
+        <input type="hidden" name="nebf_action" value="import_products">
         <input type="submit"
-               name="nebf_import_products"
                class="button button-primary"
                value="Hämta produkter från BeautyFort">
     </form>
-<form method="post" style="margin-top:0.5em;">
-    <?php wp_nonce_field('nebf_clear_cache_nonce'); ?>
-    <input type="submit"
-           name="nebf_clear_cache"
-           class="button"
-           value="Rensa cache">
-</form>
 
     <?php if ($last_fetch): ?>
         <p>
@@ -148,18 +103,14 @@ if (isset($_POST['nebf_clear_cache'])) {
             (<?php echo intval($last_fetch_count); ?> produkter)
         </p>
     <?php endif; ?>
-    <p>
-    <strong>Cache-status:</strong>
-    <?php echo esc_html(nebf_get_cache_status()); ?>
-</p>
-
 
     <form method="post" style="margin-top:1em;">
         <?php wp_nonce_field('nebf_test_api_nonce'); ?>
+        <input type="hidden" name="nebf_action" value="test_api">
         <input type="submit"
-               name="nebf_test_api"
                class="button"
                value="Testa API-anslutning">
     </form>
+
 <?php
 }

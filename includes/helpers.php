@@ -155,33 +155,6 @@ function nebf_format_field($field)
 }
 
 /**
- * Hämtar importerade BeautyFort IDs
- */
-function nebf_get_imported_bf_ids()
-{
-    $ids = get_transient('nebf_imported_bf_ids');
-
-    if ($ids !== false) return $ids;
-
-    $ids = get_posts([
-        'post_type'  => 'product',
-        'meta_key'   => '_beautyfort_id',
-        'fields'     => 'meta_value',
-        'nopaging'   => true,
-    ]);
-
-    $hours = get_option('nebf_cache_time', 1);
-
-if ($hours === -1) {
-    set_transient('nebf_beautyfort_products', $products, 0); // 0 = permanent
-} else {
-    set_transient('nebf_beautyfort_products', $products, $hours * HOUR_IN_SECONDS);
-}
-
-    return $ids;
-}
-
-/**
  * Genererar sorteringslänk för tabellkolumner
  */
 function nebf_sort_link($column, $current_orderby, $current_order, $label)
@@ -213,34 +186,7 @@ function nebf_sort_link($column, $current_orderby, $current_order, $label)
     return '<a href="' . esc_url($url) . '">' . esc_html($label) . $arrow . '</a>';
 }
 
-function nebf_get_cache_status()
-{
-    $cache_time = (int) get_option('nebf_cache_time', 1);
-    $transient  = get_transient('nebf_beautyfort_products');
-
-    if ($cache_time === -1 && $transient !== false) {
-        return 'Permanent cache';
-    }
-
-    if ($transient === false) {
-        return 'Ingen cache';
-    }
-
-    // Hämta timeout för transient
-    $timeout = get_option('_transient_timeout_nebf_beautyfort_products');
-
-    if (!$timeout) {
-        return 'Ingen cache';
-    }
-
-    $remaining = $timeout - time();
-
-    if ($remaining <= 0) {
-        return 'Cache har löpt ut';
-    }
-
-    $hours = round($remaining / HOUR_IN_SECONDS, 1);
-
-    return 'Cache giltig i ca ' . $hours . ' h';
+function nebf_get_cached_products() {
+    $products = get_option('nebf_beautyfort_products', []);
+    return is_array($products) ? $products : [];
 }
-
