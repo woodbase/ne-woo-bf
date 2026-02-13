@@ -190,15 +190,19 @@ function nebf_render_products_page()
             ?>
                 <tr class="product-row" data-accordion="<?= esc_attr($accordion_id); ?>">
                     <td>
-    <?php if (!$is_imported): ?>
-        <input type="checkbox" name="selected_products[]" value="<?= esc_attr($product['bf_id']); ?>">
-        <input type="hidden" name="sale_prices[<?= esc_attr($product['bf_id']); ?>]" value="<?= esc_attr($sale_price); ?>">
+    <input type="checkbox" 
+           name="selected_products[]" 
+           value="<?= esc_attr($product['bf_id']); ?>" >
+    <input type="hidden" name="sale_prices[<?= esc_attr($product['bf_id']); ?>]" value="<?= esc_attr($sale_price); ?>">
+</td>
+                    <td>
+    <?php if ($is_imported): ?>
+        <span title="Synkad till Woocommerce" class="material-icons" style="color:green;">check_circle</span>
     <?php else: ?>
-        —
+        <span title="Inte synkad till Woocommerce" class="material-icons" style="color:gray;">radio_button_unchecked</span>
     <?php endif; ?>
 </td>
 
-                    <td><?= $is_imported ? '🟢' : '⚪'; ?></td>
                     <td><?= !empty($product['thumbnail_url']) ? '<img src="' . esc_url($product['thumbnail_url']) . '" width="50">' : '—'; ?></td>
                     <td><?= esc_html($product['fullname'] ?? '—'); ?><br /><span style="font-size:0.8em;color:#666;font-style:italic">(<?= esc_html($product['rawname'] ?? '—'); ?>)</span></td>
                     <td><?= esc_html($product['sku'] ?? '—'); ?></td>
