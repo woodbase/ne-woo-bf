@@ -133,7 +133,32 @@ function nebf_save_inline_price()
  * Enqueue Material Icons for admin pages.
  */
 function nebf_enqueue_material_icons($hook) {
-    if ($hook !== 'toplevel_page_nordic_equilibro_beautyfort') return;
-    wp_enqueue_style('material-icons', 'https://fonts.googleapis.com/icon?family=Material+Icons');
+
+    if (strpos($hook, 'nordic_equilibro_beautyfort') === false) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'nebf-material-icons',
+        'https://fonts.googleapis.com/css2?family=Material+Icons',
+        [],
+        null
+    );
 }
 add_action('admin_enqueue_scripts', 'nebf_enqueue_material_icons');
+
+function nebf_admin_icon_styles() {
+    ?>
+    <style>
+        .nebf-icon-spin {
+            animation: nebf-spin 1s linear infinite;
+        }
+
+        @keyframes nebf-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <?php
+}
+add_action('admin_head', 'nebf_admin_icon_styles');

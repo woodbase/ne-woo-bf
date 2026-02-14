@@ -190,3 +190,31 @@ function nebf_get_cached_products() {
     $products = get_option('nebf_beautyfort_products', []);
     return is_array($products) ? $products : [];
 }
+
+/**
+ * Render Material Icon
+ */
+function nebf_icon($name, $class = '', $size = 20) {
+
+    $style = "font-size: {$size}px; vertical-align: middle;";
+
+    return sprintf(
+        '<span class="material-icons %s" style="%s">%s</span>',
+        esc_attr($class),
+        esc_attr($style),
+        esc_html($name)
+    );
+}
+
+function nebf_sync_status_icon($is_imported) {
+
+    if ($is_imported) {
+        return '<span title="Synkad till WooCommerce">'
+            . nebf_icon('check_circle', 'nebf-icon-success')
+            . '</span>';
+    }
+
+    return '<span title="Inte synkad till WooCommerce">'
+        . nebf_icon('radio_button_unchecked', 'nebf-icon-muted')
+        . '</span>';
+}

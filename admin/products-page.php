@@ -196,11 +196,7 @@ function nebf_render_products_page()
     <input type="hidden" name="sale_prices[<?= esc_attr($product['bf_id']); ?>]" value="<?= esc_attr($sale_price); ?>">
 </td>
                     <td>
-    <?php if ($is_imported): ?>
-        <span title="Synkad till Woocommerce" class="material-icons" style="color:green;">check_circle</span>
-    <?php else: ?>
-        <span title="Inte synkad till Woocommerce" class="material-icons" style="color:gray;">radio_button_unchecked</span>
-    <?php endif; ?>
+    <?php echo nebf_sync_status_icon($is_imported); ?>
 </td>
 
                     <td><?= !empty($product['thumbnail_url']) ? '<img src="' . esc_url($product['thumbnail_url']) . '" width="50">' : '—'; ?></td>
