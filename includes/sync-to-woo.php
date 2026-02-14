@@ -197,8 +197,6 @@ function nebf_attach_image_from_url($image_url, $product_id) {
     // Store original URL as meta and set as featured image
     update_post_meta($attachment_id, '_nebf_image_url', $image_url);
     set_post_thumbnail($product_id, $attachment_id);
-
-    error_log('NEBF: Image attached successfully, attachment ID ' . $attachment_id);
 }
 
 
