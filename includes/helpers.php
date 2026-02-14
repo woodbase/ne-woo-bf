@@ -12,11 +12,11 @@ function nebf_get_status_icon($status)
 {
     switch ($status) {
         case 'publish':
-            return '<span class="dashicons dashicons-yes-alt" style="color: #46b450;" title="Publicerad"></span>';
+            return '<span class="dashicons dashicons-yes-alt" style="color: #46b450;" title="' . esc_attr(__('Publicerad', 'nordic-equilibro-beautyfort')) . '"></span>';
         case 'draft':
-            return '<span class="dashicons dashicons-edit" style="color: #ffb900;" title="Utkast"></span>';
+            return '<span class="dashicons dashicons-edit" style="color: #ffb900;" title="' . esc_attr(__('Utkast', 'nordic-equilibro-beautyfort')) . '"></span>';
         default:
-            return '<span class="dashicons dashicons-warning" style="color: #dc3232;" title="Okänd status"></span>';
+            return '<span class="dashicons dashicons-warning" style="color: #dc3232;" title="' . esc_attr(__('Okänd status', 'nordic-equilibro-beautyfort')) . '"></span>';
     }
 }
 
@@ -45,20 +45,20 @@ function nebf_render_product_details($product)
     <div style="padding:16px; background:#f9f9f9; border-left:4px solid #2271b1;">
         <h3><?php echo esc_html($product->get_name()); ?></h3>
 
-        <p><strong>Status:</strong> <?php echo esc_html($product->get_status()); ?></p>
-        <p><strong>SKU:</strong> <?php echo esc_html($product->get_sku()); ?></p>
-        <p><strong>Beskrivning:</strong><br><?php echo wp_kses_post($product->get_description() ?: 'Ingen beskrivning'); ?></p>
-        <p><strong>Kort beskrivning:</strong><br><?php echo wp_kses_post($product->get_short_description() ?: '–'); ?></p>
-        <p><strong>Lager:</strong>
+        <p><strong><?php _e('Status:', 'nordic-equilibro-beautyfort'); ?></strong> <?php echo esc_html($product->get_status()); ?></p>
+        <p><strong><?php _e('SKU:', 'nordic-equilibro-beautyfort'); ?></strong> <?php echo esc_html($product->get_sku()); ?></p>
+        <p><strong><?php _e('Beskrivning:', 'nordic-equilibro-beautyfort'); ?></strong><br><?php echo wp_kses_post($product->get_description() ?: __('Ingen beskrivning', 'nordic-equilibro-beautyfort')); ?></p>
+        <p><strong><?php _e('Kort beskrivning:', 'nordic-equilibro-beautyfort'); ?></strong><br><?php echo wp_kses_post($product->get_short_description() ?: '–'); ?></p>
+        <p><strong><?php _e('Lager:', 'nordic-equilibro-beautyfort'); ?></strong>
             <?php
             echo $product->get_manage_stock()
                 ? intval($product->get_stock_quantity())
-                : 'Ej lagerstyrd';
+                : __('Ej lagerstyrd', 'nordic-equilibro-beautyfort');
             ?>
         </p>
-        <p><strong>Pris:</strong> <?php echo wc_price($product->get_price()); ?></p>
+        <p><strong><?php _e('Pris:', 'nordic-equilibro-beautyfort'); ?></strong> <?php echo wc_price($product->get_price()); ?></p>
 
-        <p><strong>Attribut:</strong><br>
+        <p><strong><?php _e('Attribut:', 'nordic-equilibro-beautyfort'); ?></strong><br>
             <?php
             $attributes = $product->get_attributes();
             if ($attributes) {
@@ -72,7 +72,7 @@ function nebf_render_product_details($product)
                 }
                 echo '</ul>';
             } else {
-                echo 'Inga attribut';
+                echo __('Inga attribut', 'nordic-equilibro-beautyfort');
             }
             ?>
         </p>
@@ -80,50 +80,11 @@ function nebf_render_product_details($product)
         <p>
             <a href="<?php echo esc_url(get_edit_post_link($product->get_id())); ?>"
                 class="button button-secondary">
-                Öppna i WooCommerce
+                <?php _e('Öppna i WooCommerce', 'nordic-equilibro-beautyfort'); ?>
             </a>
         </p>
     </div>
 <?php
-}
-
-/**
- * Hämtar produkter från WooCommerce
- */
-function nebf_get_wc_products($args = [])
-{
-    $products = wc_get_products(array_merge([
-        'limit'    => 200,
-        'status'   => ['publish', 'draft'],
-        'orderby'  => 'date',
-        'order'    => 'DESC',
-        'meta_query' => [
-            [
-                'key'     => '_nebf_product_id',
-                'compare' => 'EXISTS',
-            ]
-        ]
-    ], $args));
-
-    $data = [];
-    foreach ($products as $product) {
-        $data[] = [
-            'id'         => $product->get_id(),
-            'name'       => $product->get_name(),
-            'sku'        => $product->get_sku(),
-            'price'      => $product->get_price(),
-            'stock'      => $product->get_stock_quantity(),
-            'status'     => $product->get_status(),
-            'image'      => wp_get_attachment_image_url($product->get_image_id(), 'thumbnail'),
-            'type'       => $product->get_type(),
-            'weight'     => $product->get_weight(),
-            'categories' => wc_get_product_category_list($product->get_id()),
-            'permalink'  => get_edit_post_link($product->get_id()),
-            'raw'        => $product, // för detaljvisning
-        ];
-    }
-
-    return $data;
 }
 
 /**
@@ -147,46 +108,9 @@ function nebf_clean_product_name($name, $brand)
  */
 function nebf_format_field($field)
 {
-    if (empty($field)) return '—';
+    if (empty($field)) return __('—', 'nordic-equilibro-beautyfort');
     if (is_array($field)) {
         return implode('<br>', array_map('esc_html', $field));
     }
     return esc_html($field);
-}
-
-/**
- * Genererar sorteringslänk för tabellkolumner
- */
-function nebf_sort_link($column, $current_orderby, $current_order, $label)
-{
-    $order = 'ASC';
-    $arrow = ' ⇅';
-
-    if ($current_orderby === $column) {
-        if ($current_order === 'ASC') {
-            $order = 'DESC';
-            $arrow = ' ▲';
-        } else {
-            $order = 'ASC';
-            $arrow = ' ▼';
-        }
-    }
-
-    $url = add_query_arg([
-        'orderby'    => $column,
-        'order'      => $order,
-        'paged'      => 1,
-        'per_page'   => $_GET['per_page'] ?? 100,
-        's'          => $_GET['s'] ?? '',
-        'brand'      => $_GET['brand'] ?? '',
-        'collection' => $_GET['collection'] ?? '',
-        'status'     => $_GET['status'] ?? '',
-    ]);
-
-    return '<a href="' . esc_url($url) . '">' . esc_html($label) . $arrow . '</a>';
-}
-
-function nebf_get_cached_products() {
-    $products = get_option('nebf_beautyfort_products', []);
-    return is_array($products) ? $products : [];
 }

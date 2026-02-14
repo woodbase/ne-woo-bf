@@ -1,5 +1,6 @@
 <?php
 if (!defined('ABSPATH')) exit;
+
 require_once plugin_dir_path(__FILE__) . 'products-page.php';
 require_once plugin_dir_path(__FILE__) . 'settings-page.php';
 require_once plugin_dir_path(__FILE__) . 'pricing-page.php';
@@ -9,6 +10,7 @@ require_once plugin_dir_path(__FILE__) . 'pricing-actions.php';
  * Registrera inställningar
  */
 add_action('admin_init', function () {
+
     register_setting(
         'nebf_settings_group',
         'nebf_api_username',
@@ -53,22 +55,29 @@ function nebf_admin_page()
     $base_url   = admin_url('admin.php?page=nordic-equilibro-beautyfort');
 ?>
     <div class="wrap">
-        <h1>Nordic Equilibro – Produkthantering</h1>
+        <h1>
+    <?php echo esc_html__('Nordic Equilibro – Produkthantering', 'ne-bf-woo'); ?>
+</h1>
 
         <h2 class="nav-tab-wrapper">
+
             <a href="<?php echo esc_url($base_url . '&tab=products'); ?>"
                 class="nav-tab <?php echo $active_tab === 'products' ? 'nav-tab-active' : ''; ?>">
-                Produkter
+                <?php echo esc_html__('Produkter', 'ne-bf-woo'); ?>
             </a>
+
             <a href="<?php echo esc_url($base_url . '&tab=pricing'); ?>"
                 class="nav-tab <?php echo $active_tab === 'pricing' ? 'nav-tab-active' : ''; ?>">
-                Pricing
+                <?php echo esc_html__('Prissättning', 'ne-bf-woo'); ?>
             </a>
+
             <a href="<?php echo esc_url($base_url . '&tab=settings'); ?>"
                 class="nav-tab <?php echo $active_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
-                Inställningar
+                <?php echo esc_html__('Inställningar', 'ne-bf-woo'); ?>
             </a>
+
         </h2>
+
         <?php
         $tabs = [
             'products' => 'nebf_render_products_page',

@@ -13,7 +13,11 @@ function nebf_render_settings_tab()
         $message = '';
 
         if (isset($_GET['imported'])) {
-            $message = intval($_GET['imported']) . ' produkter importerades.';
+            $message = sprintf(
+                /* translators: %d = antal importerade produkter */
+                _n('%d produkt importerades.', '%d produkter importerades.', intval($_GET['imported']), 'ne-bf-woo'),
+                intval($_GET['imported'])
+            );
         }
 
         if (isset($_GET['message'])) {
@@ -32,7 +36,7 @@ function nebf_render_settings_tab()
         <table class="form-table">
 
             <tr>
-                <th>API Username</th>
+                <th><?php _e('API Username', 'ne-bf-woo'); ?></th>
                 <td>
                     <input type="text"
                            name="nebf_api_username"
@@ -42,7 +46,7 @@ function nebf_render_settings_tab()
             </tr>
 
             <tr>
-                <th>API Secret</th>
+                <th><?php _e('API Secret', 'ne-bf-woo'); ?></th>
                 <td>
                     <input type="password"
                            name="nebf_api_secret"
@@ -52,38 +56,38 @@ function nebf_render_settings_tab()
             </tr>
 
             <tr>
-                <th scope="row">Produktnamn</th>
+                <th scope="row"><?php _e('Produktnamn', 'ne-bf-woo'); ?></th>
                 <td>
                     <label>
                         <input type="checkbox"
                                name="nebf_strip_brand_from_name"
                                value="1"
                                <?php checked(1, get_option('nebf_strip_brand_from_name', 1)); ?>>
-                        Ta bort varumärke från produktnamn vid import
+                        <?php _e('Ta bort varumärke från produktnamn vid import', 'ne-bf-woo'); ?>
                     </label>
                     <p class="description">
-                        Om markerad tas varumärket bort från början av produktnamnet
+                        <?php _e('Om markerad tas varumärket bort från början av produktnamnet', 'ne-bf-woo'); ?>
                         (t.ex. <em>Maria Åkerberg – Shea Balm</em> → <em>Shea Balm</em>).
                     </p>
                 </td>
             </tr>
 
             <tr>
-                <th scope="row">Test mode</th>
+                <th scope="row"><?php _e('Test mode', 'ne-bf-woo'); ?></th>
                 <td>
                     <label>
                         <input type="checkbox"
                                name="nebf_api_testmode"
                                value="1"
                                <?php checked(get_option('nebf_api_testmode'), '1'); ?>>
-                        Använd testläge (sandbox)
+                        <?php _e('Använd testläge (sandbox)', 'ne-bf-woo'); ?>
                     </label>
                 </td>
             </tr>
 
         </table>
 
-        <?php submit_button('Spara inställningar'); ?>
+        <?php submit_button(__('Spara inställningar', 'ne-bf-woo')); ?>
     </form>
 
     <hr>
@@ -93,14 +97,14 @@ function nebf_render_settings_tab()
         <input type="hidden" name="nebf_action" value="import_products">
         <input type="submit"
                class="button button-primary"
-               value="Hämta produkter från BeautyFort">
+               value="<?php _e('Hämta produkter från BeautyFort', 'ne-bf-woo'); ?>">
     </form>
 
     <?php if ($last_fetch): ?>
         <p>
-            Senast hämtad data:
+            <?php _e('Senast hämtad data:', 'ne-bf-woo'); ?>
             <?php echo esc_html($last_fetch); ?>
-            (<?php echo intval($last_fetch_count); ?> produkter)
+            (<?php echo intval($last_fetch_count); ?> <?php _e('produkter', 'ne-bf-woo'); ?>)
         </p>
     <?php endif; ?>
 
@@ -109,7 +113,7 @@ function nebf_render_settings_tab()
         <input type="hidden" name="nebf_action" value="test_api">
         <input type="submit"
                class="button"
-               value="Testa API-anslutning">
+               value="<?php _e('Testa API-anslutning', 'ne-bf-woo'); ?>">
     </form>
 
 <?php

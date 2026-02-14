@@ -137,3 +137,17 @@ function nebf_enqueue_material_icons($hook) {
     wp_enqueue_style('material-icons', 'https://fonts.googleapis.com/icon?family=Material+Icons');
 }
 add_action('admin_enqueue_scripts', 'nebf_enqueue_material_icons');
+
+/**
+ * Plugin Name: BeautyFort Plugin
+ * Text Domain: beautyfort
+ * Domain Path: /languages
+ */
+
+add_action('plugins_loaded', function() {
+    load_plugin_textdomain(
+        'ne-bf-woo',
+        false,
+        dirname(plugin_basename(__FILE__)) . '/languages'
+    );
+});

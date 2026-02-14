@@ -4,7 +4,7 @@ function nebf_render_api_view()
 {
 ?>
     <div class="wrap">
-        <h1>Beautyfort – Lagerdata</h1>
+        <h1><?php _e('BeautyFort – Lagerdata', 'ne-bf-woo'); ?></h1>
 
         <?php
         $data = nebf_get_stock_file(); // <-- API-funktion
@@ -17,7 +17,7 @@ function nebf_render_api_view()
         }
 
         if (empty($data)) {
-            echo '<p>Inget data returnerades.</p>';
+            echo '<p>' . esc_html__('Inget data returnerades.', 'ne-bf-woo') . '</p>';
             return;
         }
         ?>
