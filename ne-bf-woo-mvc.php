@@ -11,7 +11,9 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-
+if (!session_id()) {
+    session_start();
+}
 define('NEBF_MVC_PATH', plugin_dir_path(__FILE__));
 define('NEBF_MVC_URL', plugin_dir_url(__FILE__));
 define('NEBF_MVC_VERSION', '1.0.0');
