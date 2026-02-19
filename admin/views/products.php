@@ -16,6 +16,8 @@ $collections = array_unique(array_filter(array_column($items, 'collection')));
 sort($collections);
 ?>
 
+<?php $this->notices->display(); ?>
+
 <!-- ========================= -->
 <!-- FILTER FORM -->
 <form id="nebf-products-filter-form" method="get" style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -52,6 +54,7 @@ sort($collections);
 <!-- ========================= -->
 <!-- SYNC FORM -->
 <form method="POST">
+    <?php wp_nonce_field('nebf_sync_selected_products'); ?>
     <button type="submit" name="nebf_sync_selected" class="button button-primary">
         <?php _e('Sync to WooCommerce', 'nebf'); ?>
     </button>

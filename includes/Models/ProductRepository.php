@@ -2,6 +2,8 @@
 
 namespace NEBF\Models;
 
+use NEBF\Services\ProductSyncService;
+
 if (!defined('ABSPATH')) exit;
 
 class ProductRepository
@@ -31,6 +33,32 @@ class ProductRepository
         // ---------------------------
 
         $products = array_filter($products, function ($product) use ($search, $filters) {
+            $bf_id = (string) ($product['bf_id'] ?? '');
+            $sku = (string) ($product['sku'] ?? '');
+            $synced_by_bf_id = false;
+
+            if ($bf_id !== '') {
+                $existing = get_posts([
+                    'post_type'   => 'product',
+                    'meta_key'    => '_beautyfort_id',
+                    'meta_value'  => $bf_id,
+                    'fields'      => 'ids',
+                    'numberposts' => 1,
+                ]);
+                $synced_by_bf_id = !empty($existing);
+            }
+
+            $is_synced = $synced_by_bf_id || (!empty($sku) && (bool) wc_get_product_id_by_sku($sku));
+
+            // Status filter
+            if (!empty($filters['status'])) {
+                if ($filters['status'] === 'imported' && !$is_synced) {
+                    return false;
+                }
+                if ($filters['status'] === 'not_imported' && $is_synced) {
+                    return false;
+                }
+            }
 
             // Brand filter
             if (
@@ -90,16 +118,22 @@ class ProductRepository
         // ---------------------------
 
         foreach ($items as &$item) {
+            $bf_id = (string) ($item['bf_id'] ?? '');
+            $sku = (string) ($item['sku'] ?? '');
+            $synced_by_bf_id = false;
 
-            $existing = get_posts([
-                'post_type'  => 'product',
-                'meta_key'   => '_beautyfort_id',
-                'meta_value' => $item['bf_id'] ?? '',
-                'fields'     => 'ids',
-                'numberposts' => 1,
-            ]);
+            if ($bf_id !== '') {
+                $existing = get_posts([
+                    'post_type'   => 'product',
+                    'meta_key'    => '_beautyfort_id',
+                    'meta_value'  => $bf_id,
+                    'fields'      => 'ids',
+                    'numberposts' => 1,
+                ]);
+                $synced_by_bf_id = !empty($existing);
+            }
 
-            $item['synced'] = !empty($existing);
+            $item['synced'] = $synced_by_bf_id || (!empty($sku) && (bool) wc_get_product_id_by_sku($sku));
         }
 
         unset($item);
@@ -168,17 +202,39 @@ class ProductRepository
     /**
      * Sync multiple products
      */
-    public function sync_products(array $bf_ids): void
+    public function sync_products(array $bf_ids, array $sale_prices = []): array
     {
+        $sync_service = new ProductSyncService();
+        $synced = 0;
+        $failed = 0;
+
         foreach ($bf_ids as $bf_id) {
+            $bf_id = sanitize_text_field((string) $bf_id);
+            if ($bf_id === '') {
+                continue;
+            }
 
             $product = $this->get_by_bf_id($bf_id);
 
             if (!$product) {
+                $failed++;
                 continue;
             }
 
-            nebf_sync_product_to_woo($product);
+            $sale_price = (float) ($sale_prices[$bf_id] ?? ($product['sale_price'] ?? $product['price'] ?? 0));
+            $result = $sync_service->sync_beautyfort_product($product, $sale_price);
+
+            if (is_wp_error($result) || (int) $result <= 0) {
+                $failed++;
+                continue;
+            }
+
+            $synced++;
         }
+
+        return [
+            'synced' => $synced,
+            'failed' => $failed,
+        ];
     }
 }
