@@ -9,6 +9,26 @@ if (!defined('ABSPATH')) exit;
 class ProductRepository
 {
     /**
+     * Calculate sale price from cost and pricing settings.
+     *
+     * Modes:
+     * - percent: sale = cost * (1 + margin/100)
+     * - fixed:   sale = cost + margin
+     */
+    public function calculate_sale_price(array $product): float
+    {
+        $cost_price = (float) ($product['price'] ?? 0);
+        $mode = get_option('nebf_margin_type', 'percent');
+        $margin_value = (float) get_option('nebf_margin_value', 0);
+
+        if ($mode === 'fixed') {
+            return max(0, round($cost_price + $margin_value, 2));
+        }
+
+        return max(0, round($cost_price * (1 + ($margin_value / 100)), 2));
+    }
+
+    /**
      * Get paginated products with search & filters
      */
     public function get_paginated(
@@ -134,6 +154,7 @@ class ProductRepository
             }
 
             $item['synced'] = $synced_by_bf_id || (!empty($sku) && (bool) wc_get_product_id_by_sku($sku));
+            $item['sale_price'] = $this->calculate_sale_price($item);
         }
 
         unset($item);
@@ -221,7 +242,9 @@ class ProductRepository
                 continue;
             }
 
-            $sale_price = (float) ($sale_prices[$bf_id] ?? ($product['sale_price'] ?? $product['price'] ?? 0));
+            $sale_price = isset($sale_prices[$bf_id])
+                ? (float) $sale_prices[$bf_id]
+                : $this->calculate_sale_price($product);
             $result = $sync_service->sync_beautyfort_product($product, $sale_price);
 
             if (is_wp_error($result) || (int) $result <= 0) {

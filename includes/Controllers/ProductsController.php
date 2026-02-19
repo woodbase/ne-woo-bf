@@ -42,6 +42,8 @@ class ProductsController extends AbstractAdminController
                 $result = $this->repo->sync_products($bf_ids, $sale_prices);
 
                 if (($result['synced'] ?? 0) > 0) {
+                    update_option('nebf_last_sync', time());
+
                     $this->notices->add(
                         sprintf(
                             _n(

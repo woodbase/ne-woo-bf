@@ -7,7 +7,8 @@ if (!defined('ABSPATH')) exit;
 /**
  * Controller for Settings tab
  */
-class SettingsController extends AbstractAdminController {
+class SettingsController extends AbstractAdminController
+{
 
     public function handle(): void
     {
@@ -26,10 +27,23 @@ class SettingsController extends AbstractAdminController {
             $separate = isset($_POST['nebf_separate_brand']) ? 1 : 0;
             update_option('nebf_separate_brand', $separate);
 
+            if (isset($_POST['nebf_margin_type'])) {
+                $margin_type = sanitize_key((string) $_POST['nebf_margin_type']);
+                if (!in_array($margin_type, ['percent', 'fixed'], true)) {
+                    $margin_type = 'percent';
+                }
+                update_option('nebf_margin_type', $margin_type);
+            }
+
+            if (isset($_POST['nebf_margin_value'])) {
+                $margin_value = (float) $_POST['nebf_margin_value'];
+                update_option('nebf_margin_value', max(0, $margin_value));
+            }
+
             // Feedback notice
-            add_action('admin_notices', function() {
+            add_action('admin_notices', function () {
                 echo '<div class="notice notice-success is-dismissible"><p>'
-                     . esc_html__('Settings saved successfully.', 'nebf-mvc') . '</p></div>';
+                    . esc_html__('Settings saved successfully.', 'nebf-mvc') . '</p></div>';
             });
         }
 

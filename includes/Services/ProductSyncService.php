@@ -176,39 +176,54 @@ class ProductSyncService
 
     private function set_brand_attribute(int $product_id, string $brand_name): void
     {
+        $brand_name = trim(sanitize_text_field($brand_name));
         if ($product_id <= 0 || $brand_name === '') {
             return;
         }
 
-        $taxonomy = 'pa_brand';
+        $attribute_slug = 'brand';
+        $taxonomy = wc_attribute_taxonomy_name($attribute_slug);
 
         if (!taxonomy_exists($taxonomy)) {
-            wc_create_attribute([
-                'name'         => 'Brand',
-                'slug'         => 'brand',
-                'type'         => 'select',
-                'order_by'     => 'menu_order',
-                'has_archives' => true,
-            ]);
+            if (!wc_attribute_taxonomy_id_by_name($attribute_slug)) {
+                wc_create_attribute([
+                    'name'         => 'Brand',
+                    'slug'         => $attribute_slug,
+                    'type'         => 'select',
+                    'order_by'     => 'menu_order',
+                    'has_archives' => true,
+                ]);
+                delete_transient('wc_attribute_taxonomies');
+            }
 
-            register_taxonomy($taxonomy, ['product'], ['hierarchical' => false]);
+            if (!taxonomy_exists($taxonomy)) {
+                register_taxonomy($taxonomy, ['product'], ['hierarchical' => false]);
+            }
         }
 
         if (!term_exists($brand_name, $taxonomy)) {
             wp_insert_term($brand_name, $taxonomy);
         }
 
-        wp_set_object_terms($product_id, $brand_name, $taxonomy);
+        wp_set_object_terms($product_id, [$brand_name], $taxonomy, false);
 
-        update_post_meta($product_id, '_product_attributes', [
-            $taxonomy => [
-                'name'         => $taxonomy,
-                'value'        => '',
-                'position'     => 0,
-                'is_visible'   => 1,
-                'is_variation' => 0,
-                'is_taxonomy'  => 1,
-            ],
-        ]);
+        $product = wc_get_product($product_id);
+        if (!$product) {
+            return;
+        }
+
+        $attributes = $product->get_attributes();
+
+        $attribute = new \WC_Product_Attribute();
+        $attribute->set_id((int) wc_attribute_taxonomy_id_by_name($attribute_slug));
+        $attribute->set_name($taxonomy);
+        $attribute->set_options(array_map('intval', wp_get_object_terms($product_id, $taxonomy, ['fields' => 'ids'])));
+        $attribute->set_position(0);
+        $attribute->set_visible(true);
+        $attribute->set_variation(false);
+
+        $attributes[$taxonomy] = $attribute;
+        $product->set_attributes($attributes);
+        $product->save();
     }
 }

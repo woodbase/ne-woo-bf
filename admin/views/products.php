@@ -14,6 +14,46 @@ $brands      = array_unique(array_filter(array_column($items, 'brand')));
 sort($brands);
 $collections = array_unique(array_filter(array_column($items, 'collection')));
 sort($collections);
+
+$nebf_scalar = static function ($value): string {
+    if (is_scalar($value)) {
+        return (string) $value;
+    }
+
+    if ($value === null) {
+        return '';
+    }
+
+    if (is_array($value)) {
+        $parts = [];
+        array_walk_recursive($value, static function ($item) use (&$parts) {
+            if (is_scalar($item)) {
+                $parts[] = (string) $item;
+            }
+        });
+        return implode(', ', $parts);
+    }
+
+    if (is_object($value) && method_exists($value, '__toString')) {
+        return (string) $value;
+    }
+
+    return '';
+};
+
+$nebf_display = static function ($value, string $fallback = '—') use ($nebf_scalar): string {
+    $text = trim($nebf_scalar($value));
+    return $text !== '' ? $text : $fallback;
+};
+
+$nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar): float {
+    if (is_numeric($value)) {
+        return (float) $value;
+    }
+
+    $text = trim($nebf_scalar($value));
+    return is_numeric($text) ? (float) $text : $default;
+};
 ?>
 
 <?php $this->notices->display(); ?>
@@ -82,8 +122,8 @@ sort($collections);
             <?php foreach ($items as $i => $product):
                 $accordion_id = 'acc-' . $i;
 
-                $cost_price = floatval($product['price'] ?? 0);
-                $sale_price = floatval($product['sale_price'] ?? $cost_price); // fallback
+                $cost_price = $nebf_float($product['price'] ?? 0);
+                $sale_price = $nebf_float($product['sale_price'] ?? $cost_price); // fallback
                 $calc_margin = $cost_price > 0 ? round((($sale_price - $cost_price) / $cost_price) * 100, 2) : 0;
 
                 $is_imported = !empty($product['synced'] ?? false);
@@ -93,16 +133,30 @@ sort($collections);
                         <input type="checkbox" name="selected_products[]" value="<?= esc_attr($product['bf_id']); ?>">
                         <input type="hidden" name="sale_prices[<?= esc_attr($product['bf_id']); ?>]" value="<?= esc_attr($sale_price); ?>">
                     </td>
-                    <td><?php echo $is_imported ? '✅' : '❌'; ?></td>
+                    <td>
+                        <?php if ($is_imported): ?>
+                            <span class="nebf-status-icon nebf-status-icon--synced" role="img" aria-label="<?php esc_attr_e('Synced', 'nebf'); ?>">
+                                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.12 14.29-3.54-3.54 1.41-1.41 2.13 2.12 4.95-4.95 1.41 1.42-6.36 6.36z"></path>
+                                </svg>
+                            </span>
+                        <?php else: ?>
+                            <span class="nebf-status-icon nebf-status-icon--not-synced" role="img" aria-label="<?php esc_attr_e('Not synced', 'nebf'); ?>">
+                                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"></path>
+                                </svg>
+                            </span>
+                        <?php endif; ?>
+                    </td>
                     <td><?= !empty($product['thumbnail_url']) ? '<img src="' . esc_url($product['thumbnail_url']) . '" width="50">' : '—'; ?></td>
-                    <td><?= esc_html($product['fullname'] ?? '—'); ?></td>
-                    <td><?= esc_html($product['sku'] ?? '—'); ?></td>
-                    <td><?= esc_html($product['brand'] ?? '—'); ?></td>
-                    <td><?= esc_html($product['collection'] ?? '—'); ?></td>
+                    <td><?= esc_html($nebf_display($product['fullname'] ?? null)); ?></td>
+                    <td><?= esc_html($nebf_display($product['sku'] ?? null)); ?></td>
+                    <td><?= esc_html($nebf_display($product['brand'] ?? null)); ?></td>
+                    <td><?= esc_html($nebf_display($product['collection'] ?? null)); ?></td>
                     <td><?= function_exists('wc_price') ? wc_price($cost_price) : esc_html($cost_price); ?></td>
-                    <td><?= function_exists('wc_price') ? wc_price($sale_price) : esc_html($sale_price); ?></td>
+                    <td><strong><?= function_exists('wc_price') ? wc_price($sale_price) : esc_html($sale_price); ?></strong></td>
                     <td><?= esc_html($calc_margin); ?>%</td>
-                    <td><?= esc_html($product['stock_level'] ?? '—'); ?></td>
+                    <td><?= esc_html($nebf_display($product['stock_level'] ?? null)); ?></td>
                     <td class="nebf-expand"><span class="dashicons dashicons-arrow-down-alt2"></span></td>
                 </tr>
 
@@ -113,23 +167,23 @@ sort($collections);
                             <tbody>
                                 <tr>
                                     <th><?php _e('Description', 'nebf'); ?></th>
-                                    <td><?= esc_html($product['description'] ?? ''); ?></td>
+                                    <td><?= esc_html($nebf_display($product['description'] ?? null, '')); ?></td>
                                 </tr>
                                 <tr>
                                     <th><?php _e('Barcode', 'nebf'); ?></th>
-                                    <td><?= esc_html($product['barcode'] ?? ''); ?></td>
+                                    <td><?= esc_html($nebf_display($product['barcode'] ?? null, '')); ?></td>
                                 </tr>
                                 <tr>
                                     <th><?php _e('Size', 'nebf'); ?></th>
-                                    <td><?= esc_html($product['size'] ?? ''); ?></td>
+                                    <td><?= esc_html($nebf_display($product['size'] ?? null, '')); ?></td>
                                 </tr>
                                 <tr>
                                     <th><?php _e('Type', 'nebf'); ?></th>
-                                    <td><?= esc_html($product['type'] ?? ''); ?></td>
+                                    <td><?= esc_html($nebf_display($product['type'] ?? null, '')); ?></td>
                                 </tr>
                                 <tr>
                                     <th><?php _e('BF ID', 'nebf'); ?></th>
-                                    <td><?= esc_html($product['bf_id'] ?? ''); ?></td>
+                                    <td><?= esc_html($nebf_display($product['bf_id'] ?? null, '')); ?></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -212,6 +266,44 @@ sort($collections);
                     field.value = '';
                 });
                 form.submit();
+            });
+        }
+
+        if (table) {
+            var productRows = table.querySelectorAll('tr.product-row');
+            var accordionRows = table.querySelectorAll('tr.accordion-row');
+
+            productRows.forEach(function(row) {
+                row.addEventListener('click', function(event) {
+                    var clickedInteractive = event.target.closest('input, button, a, select, textarea, label');
+                    if (clickedInteractive && !event.target.closest('.nebf-expand')) {
+                        return;
+                    }
+
+                    var accordionId = row.getAttribute('data-accordion');
+                    if (!accordionId) {
+                        return;
+                    }
+
+                    var accordion = document.getElementById(accordionId);
+                    if (!accordion) {
+                        return;
+                    }
+
+                    var isOpen = accordion.style.display !== 'none';
+
+                    accordionRows.forEach(function(otherAccordion) {
+                        otherAccordion.style.display = 'none';
+                    });
+                    productRows.forEach(function(otherRow) {
+                        otherRow.classList.remove('is-open');
+                    });
+
+                    if (!isOpen) {
+                        accordion.style.display = '';
+                        row.classList.add('is-open');
+                    }
+                });
             });
         }
     });

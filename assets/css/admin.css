@@ -16,6 +16,86 @@
     font-size: 28px;
     font-weight: bold;
     margin: 10px 0 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nebf-number--date {
+    font-size: 20px;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.nebf-dashboard-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.nebf-dashboard-actions .button .nebf-btn-spinner {
+    display: none;
+    margin-left: 6px;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 20px;
+    animation: nebf-spin 0.9s linear infinite;
+}
+
+.nebf-dashboard-actions .button.is-loading .nebf-btn-spinner {
+    display: inline-block;
+}
+
+.nebf-dashboard-actions .button.is-loading {
+    pointer-events: none;
+    opacity: 0.9;
+}
+
+@keyframes nebf-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.nebf-number.is-updated {
+    animation: nebf-number-pop 0.7s ease;
+}
+
+.nebf-number .nebf-value-spinner {
+    display: none;
+    width: 28px;
+    height: 28px;
+    font-size: 28px;
+    line-height: 28px;
+    animation: nebf-spin 0.9s linear infinite;
+}
+
+.nebf-number.is-loading .nebf-value-spinner {
+    display: inline-block;
+}
+
+.nebf-number.is-loading .nebf-value-text {
+    display: none;
+}
+
+@keyframes nebf-number-pop {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    35% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 /* Shared page header styling */
 .nebf-page-header {
@@ -31,3 +111,37 @@
 }
 
 /* Active tab styling is handled by WP 'nav-tab-active' class */
+
+/* Products accordion */
+.nebf-products-table tr.product-row .nebf-expand {
+    cursor: pointer;
+    text-align: center;
+}
+
+.nebf-products-table tr.product-row .nebf-expand .dashicons {
+    transform: rotate(-90deg);
+    transition: transform 0.2s ease;
+}
+
+.nebf-products-table tr.product-row.is-open .nebf-expand .dashicons {
+    transform: rotate(0deg);
+}
+
+.nebf-products-table .nebf-status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nebf-products-table .nebf-status-icon svg {
+    display: block;
+    fill: currentColor;
+}
+
+.nebf-products-table .nebf-status-icon--synced {
+    color: #1e8e3e;
+}
+
+.nebf-products-table .nebf-status-icon--not-synced {
+    color: #d93025;
+}
