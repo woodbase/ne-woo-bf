@@ -45,6 +45,6 @@ class NoticeService {
             );
         }
 
-        unset($_SESSION['nebf_notices']);
+        unset($_SESSION['nebf_notices'  ]);
     }
 }

@@ -4,9 +4,7 @@ namespace NEBF\Core;
 
 use NEBF\Controllers\AdminMenuController;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
+if (!defined('ABSPATH')) exit;
 
 /**
  * Main plugin class.
@@ -14,17 +12,11 @@ if (!defined('ABSPATH')) {
 class Plugin {
 
     /**
-     * Initialize plugin components.
+     * Initialize plugin.
      */
-    public function init() {
-        $this->register_controllers();
-    }
-
-    /**
-     * Register all controllers.
-     */
-    private function register_controllers() {
-        $adminMenu = new AdminMenuController();
-        $adminMenu->register_hooks();
+    public function init(): void
+    {
+        // Register admin menu
+        (new AdminMenuController())->register_hooks();
     }
 }
