@@ -1,26 +1,28 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-/** @var array $args */
-$products    = $args['products'] ?? [];
-$page        = $args['page'] ?? 1;
-$total_pages = $args['total_pages'] ?? 1;
-$search_term = $args['search_term'] ?? '';
-$filters     = $args['filters'] ?? ['brand'=>'','collection'=>'','status'=>''];
+/** @var array $products */
+$products    = $products ?? [];
+$items       = is_array($products['items'] ?? null) ? $products['items'] : [];
+$page        = $page ?? 1;
+$total_pages = $total_pages ?? 1;
+$search_term = $search_term ?? '';
+$filters     = $filters ?? ['brand' => '', 'collection' => '', 'status' => ''];
 
 // --- Prepare dropdown options ---
-$brands      = array_unique(array_filter(array_column($products, 'brand')));
+$brands      = array_unique(array_filter(array_column($items, 'brand')));
 sort($brands);
-$collections = array_unique(array_filter(array_column($products, 'collection')));
+$collections = array_unique(array_filter(array_column($items, 'collection')));
 sort($collections);
 ?>
 
 <!-- ========================= -->
 <!-- FILTER FORM -->
-<form method="get" style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
-    <input type="hidden" name="page" value="<?= esc_attr($_GET['page'] ?? '') ?>">
+<form id="nebf-products-filter-form" method="get" style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+    <input type="hidden" name="page" value="nebf-mvc">
+    <input type="hidden" name="tab" value="products">
     <input type="number" name="per_page" value="<?= esc_attr($_GET['per_page'] ?? 20) ?>" min="1" max="500">
-    <input type="search" name="s" placeholder="<?php _e('Search name / SKU / brand', 'nebf'); ?>" value="<?= esc_attr($search_term); ?>">
+    <input id="nebf-products-search" type="search" name="s" placeholder="<?php _e('Search name / SKU / brand', 'nebf'); ?>" value="<?= esc_attr($search_term); ?>">
 
     <select name="brand">
         <option value=""><?php _e('All brands', 'nebf'); ?></option>
@@ -43,7 +45,8 @@ sort($collections);
     </select>
 
     <button class="button button-primary"><?php _e('Update', 'nebf'); ?></button>
-    <button id="nebf-select-all" class="button"><?php _e('Select all', 'nebf'); ?></button>
+    <button id="nebf-select-all" type="button" class="button"><?php _e('Select all', 'nebf'); ?></button>
+    <button id="nebf-reset-search" type="button" class="button"><?php _e('Reset search', 'nebf'); ?></button>
 </form>
 
 <!-- ========================= -->
@@ -73,48 +76,63 @@ sort($collections);
             </tr>
         </thead>
         <tbody>
-        <?php foreach ($products as $i => $product):
-            $accordion_id = 'acc-' . $i;
+            <?php foreach ($items as $i => $product):
+                $accordion_id = 'acc-' . $i;
 
-            $cost_price = floatval($product['price'] ?? 0);
-            $sale_price = floatval($product['sale_price'] ?? $cost_price); // fallback
-            $calc_margin = $cost_price > 0 ? round((($sale_price - $cost_price)/$cost_price)*100, 2) : 0;
+                $cost_price = floatval($product['price'] ?? 0);
+                $sale_price = floatval($product['sale_price'] ?? $cost_price); // fallback
+                $calc_margin = $cost_price > 0 ? round((($sale_price - $cost_price) / $cost_price) * 100, 2) : 0;
 
-            $is_imported = !empty($product['synced'] ?? false);
-        ?>
-            <tr class="product-row" data-accordion="<?= esc_attr($accordion_id); ?>">
-                <td>
-                    <input type="checkbox" name="selected_products[]" value="<?= esc_attr($product['bf_id']); ?>">
-                    <input type="hidden" name="sale_prices[<?= esc_attr($product['bf_id']); ?>]" value="<?= esc_attr($sale_price); ?>">
-                </td>
-                <td><?php echo $is_imported ? '✅' : '❌'; ?></td>
-                <td><?= !empty($product['thumbnail_url']) ? '<img src="' . esc_url($product['thumbnail_url']) . '" width="50">' : '—'; ?></td>
-                <td><?= esc_html($product['fullname'] ?? '—'); ?></td>
-                <td><?= esc_html($product['sku'] ?? '—'); ?></td>
-                <td><?= esc_html($product['brand'] ?? '—'); ?></td>
-                <td><?= esc_html($product['collection'] ?? '—'); ?></td>
-                <td><?= function_exists('wc_price') ? wc_price($cost_price) : esc_html($cost_price); ?></td>
-                <td><?= function_exists('wc_price') ? wc_price($sale_price) : esc_html($sale_price); ?></td>
-                <td><?= esc_html($calc_margin); ?>%</td>
-                <td><?= esc_html($product['stock_level'] ?? '—'); ?></td>
-                <td class="nebf-expand"><span class="dashicons dashicons-arrow-down-alt2"></span></td>
-            </tr>
+                $is_imported = !empty($product['synced'] ?? false);
+            ?>
+                <tr class="product-row" data-accordion="<?= esc_attr($accordion_id); ?>">
+                    <td>
+                        <input type="checkbox" name="selected_products[]" value="<?= esc_attr($product['bf_id']); ?>">
+                        <input type="hidden" name="sale_prices[<?= esc_attr($product['bf_id']); ?>]" value="<?= esc_attr($sale_price); ?>">
+                    </td>
+                    <td><?php echo $is_imported ? '✅' : '❌'; ?></td>
+                    <td><?= !empty($product['thumbnail_url']) ? '<img src="' . esc_url($product['thumbnail_url']) . '" width="50">' : '—'; ?></td>
+                    <td><?= esc_html($product['fullname'] ?? '—'); ?></td>
+                    <td><?= esc_html($product['sku'] ?? '—'); ?></td>
+                    <td><?= esc_html($product['brand'] ?? '—'); ?></td>
+                    <td><?= esc_html($product['collection'] ?? '—'); ?></td>
+                    <td><?= function_exists('wc_price') ? wc_price($cost_price) : esc_html($cost_price); ?></td>
+                    <td><?= function_exists('wc_price') ? wc_price($sale_price) : esc_html($sale_price); ?></td>
+                    <td><?= esc_html($calc_margin); ?>%</td>
+                    <td><?= esc_html($product['stock_level'] ?? '—'); ?></td>
+                    <td class="nebf-expand"><span class="dashicons dashicons-arrow-down-alt2"></span></td>
+                </tr>
 
-            <!-- Accordion row -->
-            <tr id="<?= esc_attr($accordion_id); ?>" class="accordion-row" style="display:none;">
-                <td colspan="12" style="background:#f6f7f7; padding:16px;">
-                    <table class="widefat striped" style="margin:0;">
-                        <tbody>
-                            <tr><th><?php _e('Description', 'nebf'); ?></th><td><?= esc_html($product['description'] ?? ''); ?></td></tr>
-                            <tr><th><?php _e('Barcode', 'nebf'); ?></th><td><?= esc_html($product['barcode'] ?? ''); ?></td></tr>
-                            <tr><th><?php _e('Size', 'nebf'); ?></th><td><?= esc_html($product['size'] ?? ''); ?></td></tr>
-                            <tr><th><?php _e('Type', 'nebf'); ?></th><td><?= esc_html($product['type'] ?? ''); ?></td></tr>
-                            <tr><th><?php _e('BF ID', 'nebf'); ?></th><td><?= esc_html($product['bf_id'] ?? ''); ?></td></tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        <?php endforeach; ?>
+                <!-- Accordion row -->
+                <tr id="<?= esc_attr($accordion_id); ?>" class="accordion-row" style="display:none;">
+                    <td colspan="12" style="background:#f6f7f7; padding:16px;">
+                        <table class="widefat striped" style="margin:0;">
+                            <tbody>
+                                <tr>
+                                    <th><?php _e('Description', 'nebf'); ?></th>
+                                    <td><?= esc_html($product['description'] ?? ''); ?></td>
+                                </tr>
+                                <tr>
+                                    <th><?php _e('Barcode', 'nebf'); ?></th>
+                                    <td><?= esc_html($product['barcode'] ?? ''); ?></td>
+                                </tr>
+                                <tr>
+                                    <th><?php _e('Size', 'nebf'); ?></th>
+                                    <td><?= esc_html($product['size'] ?? ''); ?></td>
+                                </tr>
+                                <tr>
+                                    <th><?php _e('Type', 'nebf'); ?></th>
+                                    <td><?= esc_html($product['type'] ?? ''); ?></td>
+                                </tr>
+                                <tr>
+                                    <th><?php _e('BF ID', 'nebf'); ?></th>
+                                    <td><?= esc_html($product['bf_id'] ?? ''); ?></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
         </tbody>
     </table>
 
@@ -138,3 +156,60 @@ sort($collections);
         </div>
     </div>
 <?php endif; ?>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('nebf-products-filter-form');
+        var searchInput = document.getElementById('nebf-products-search');
+        var selectAllButton = document.getElementById('nebf-select-all');
+        var resetSearchButton = document.getElementById('nebf-reset-search');
+        var table = document.querySelector('.nebf-products-table');
+        var defaultSelectAllText = <?php echo wp_json_encode(__('Select all', 'nebf')); ?>;
+        var defaultUnselectAllText = <?php echo wp_json_encode(__('Unselect all', 'nebf')); ?>;
+
+        if (!form || !searchInput) {
+            return;
+        }
+
+        var debounceTimer = null;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() {
+                form.submit();
+            }, 350);
+        });
+
+        if (selectAllButton && table) {
+            selectAllButton.addEventListener('click', function() {
+                var checkboxes = table.querySelectorAll('input[type="checkbox"][name="selected_products[]"]');
+                if (!checkboxes.length) {
+                    return;
+                }
+
+                var allChecked = true;
+                checkboxes.forEach(function(checkbox) {
+                    if (!checkbox.checked) {
+                        allChecked = false;
+                    }
+                });
+
+                var shouldCheck = !allChecked;
+                checkboxes.forEach(function(checkbox) {
+                    checkbox.checked = shouldCheck;
+                });
+
+                selectAllButton.textContent = shouldCheck ? defaultUnselectAllText : defaultSelectAllText;
+            });
+        }
+
+        if (resetSearchButton) {
+            resetSearchButton.addEventListener('click', function() {
+                form.querySelectorAll('input[name="s"], select[name="brand"], select[name="collection"], select[name="status"]').forEach(function(field) {
+                    field.value = '';
+                });
+                form.submit();
+            });
+        }
+    });
+</script>

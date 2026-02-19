@@ -33,14 +33,16 @@ class ProductRepository
         $products = array_filter($products, function ($product) use ($search, $filters) {
 
             // Brand filter
-            if (!empty($filters['brand']) &&
+            if (
+                !empty($filters['brand']) &&
                 strcasecmp($product['brand'] ?? '', $filters['brand']) !== 0
             ) {
                 return false;
             }
 
             // Collection filter
-            if (!empty($filters['collection']) &&
+            if (
+                !empty($filters['collection']) &&
                 strcasecmp($product['collection'] ?? '', $filters['collection']) !== 0
             ) {
                 return false;
@@ -50,8 +52,8 @@ class ProductRepository
             if (!empty($search)) {
                 $haystack = strtolower(
                     ($product['fullname'] ?? '') . ' ' .
-                    ($product['sku'] ?? '') . ' ' .
-                    ($product['brand'] ?? '')
+                        ($product['sku'] ?? '') . ' ' .
+                        ($product['brand'] ?? '')
                 );
 
                 if (strpos($haystack, strtolower($search)) === false) {
@@ -107,6 +109,46 @@ class ProductRepository
             'page'        => $page,
             'total_pages' => $total_pages,
         ];
+    }
+
+    /**
+     * Get product by BeautyFort ID
+     */
+    public function get_all(): array
+    {
+        $all = get_option('nebf_beautyfort_products', []);
+
+        if (!is_array($all)) {
+            return [];
+        }
+
+        return $all;
+    }
+
+    /**
+     * Save products from API response into option storage.
+     * Stored format: [bf_id => product_data]
+     */
+    public function save_products(array $products): void
+    {
+        $normalized = [];
+
+        foreach ($products as $product) {
+            if (!is_array($product)) {
+                continue;
+            }
+
+            $bf_id = (string)($product['bf_id'] ?? $product['id'] ?? '');
+
+            if ($bf_id === '') {
+                continue;
+            }
+
+            $product['bf_id'] = $bf_id;
+            $normalized[$bf_id] = $product;
+        }
+
+        update_option('nebf_beautyfort_products', $normalized);
     }
 
     /**
