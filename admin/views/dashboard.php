@@ -1,28 +1,37 @@
 <?php
-/**
- * Dashboard view
- * Variables available:
- *  - total_products
- *  - synced_products
- *  - unsynced_products
- *  - last_sync
- */
-
-if (!defined('ABSPATH')) exit;
+$this->notices->display();
 ?>
 
-<div class="nebf-dashboard">
+<div class="nebf-dashboard-cards">
 
-    <p><?php printf(esc_html__('Total products: %d', 'nebf-mvc'), $total_products); ?></p>
-    <p><?php printf(esc_html__('Synced products: %d', 'nebf-mvc'), $synced_products); ?></p>
-    <p><?php printf(esc_html__('Unsynced products: %d', 'nebf-mvc'), $unsynced_products); ?></p>
-    <p><?php printf(esc_html__('Last sync: %s', 'nebf-mvc'), $last_sync ?: __('Never', 'nebf-mvc')); ?></p>
+    <div class="nebf-card">
+        <h2><?php esc_html_e('Total Products', 'nebf-mvc'); ?></h2>
+        <p class="nebf-number"><?php echo esc_html($total_products ?? 0); ?></p>
+    </div>
 
-    <form method="post" style="margin-top:20px;">
-        <?php wp_nonce_field('nebf_sync_products'); ?>
-        <input type="hidden" name="nebf_sync_all" value="1">
-        <input type="submit" class="button button-primary"
-               value="<?php esc_attr_e('Sync all products to WooCommerce', 'nebf-mvc'); ?>">
-    </form>
+    <div class="nebf-card">
+        <h2><?php esc_html_e('Synced to WooCommerce', 'nebf-mvc'); ?></h2>
+        <p class="nebf-number"><?php echo esc_html($synced_products ?? 0); ?></p>
+    </div>
+
+    <div class="nebf-card">
+        <h2><?php esc_html_e('Not Synced', 'nebf-mvc'); ?></h2>
+        <p class="nebf-number"><?php echo esc_html($unsynced_products ?? 0); ?></p>
+    </div>
+
+    <div class="nebf-card">
+        <h2><?php esc_html_e('Last Sync', 'nebf-mvc'); ?></h2>
+        <p><?php echo esc_html($last_sync ?? __('Never', 'nebf-mvc')); ?></p>
+    </div>
 
 </div>
+
+<p>
+    <a href="<?php echo esc_url(add_query_arg([
+        'page' => 'nebf-mvc',
+        'tab'  => 'products'
+    ], admin_url('admin.php'))); ?>"
+       class="button button-primary">
+        <?php esc_html_e('Manage Products', 'nebf-mvc'); ?>
+    </a>
+</p>

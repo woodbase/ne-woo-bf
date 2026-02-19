@@ -5,29 +5,63 @@ namespace NEBF\Controllers;
 if (!defined('ABSPATH')) exit;
 
 /**
- * Routes current admin page request to the correct controller.
+ * Handles routing of admin tabs and renders the correct controller
  */
 class AdminPageRouter {
 
     public function handle(): void
     {
+        // Determine which tab to show
         $tab = $_GET['tab'] ?? 'dashboard';
 
-        // Render shared header + tabs
-        $active_tab = $tab;
-        include NEBF_MVC_PATH . 'admin/views/partials/page-header-tabs.php';
+        // Render header + tabs (always visible)
+        $this->render_header_tabs($tab);
 
-        // Dispatch to the correct controller
+        // Route to the proper controller
         switch ($tab) {
             case 'products':
-                (new ProductsController())->handle();
+                $controller = new ProductsController();
                 break;
+
             case 'settings':
-                (new SettingsController())->handle();
+                $controller = new SettingsController();
                 break;
+
             default:
-                (new DashboardController())->handle();
+                $controller = new DashboardController();
                 break;
         }
+
+        // Execute the controller
+        $controller->handle();
+    }
+
+    /**
+     * Renders the page header and nav tabs
+     */
+    private function render_header_tabs(string $active_tab): void
+    {
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Nordic Equilibro - BeautyFort integration', 'nebf-mvc'); ?></h1>
+
+            <h2 class="nav-tab-wrapper">
+                <a href="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=dashboard')); ?>"
+                   class="nav-tab <?php echo $active_tab === 'dashboard' ? 'nav-tab-active' : ''; ?>">
+                    <?php esc_html_e('Dashboard', 'nebf-mvc'); ?>
+                </a>
+
+                <a href="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=products')); ?>"
+                   class="nav-tab <?php echo $active_tab === 'products' ? 'nav-tab-active' : ''; ?>">
+                    <?php esc_html_e('Products', 'nebf-mvc'); ?>
+                </a>
+
+                <a href="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=settings')); ?>"
+                   class="nav-tab <?php echo $active_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
+                    <?php esc_html_e('Settings', 'nebf-mvc'); ?>
+                </a>
+            </h2>
+        </div>
+        <?php
     }
 }

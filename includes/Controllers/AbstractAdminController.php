@@ -2,24 +2,36 @@
 
 namespace NEBF\Controllers;
 
+use NEBF\Services\NoticeService;
+
 if (!defined('ABSPATH')) exit;
 
 /**
- * Base controller for all admin pages.
+ * Base controller for admin pages
  */
 abstract class AbstractAdminController {
 
-    protected function render(string $view_name, array $data = []): void
-    {
-        extract($data, EXTR_SKIP);
-        $view_file = NEBF_MVC_PATH . "admin/views/{$view_name}.php";
+    /** @var NoticeService */
+    protected $notices;
 
-        if (file_exists($view_file)) {
-            include $view_file;
-        } else {
-            echo esc_html__("View not found: {$view_name}", 'nebf-mvc');
-        }
+    public function __construct()
+    {
+        // Initialize notice service
+        $this->notices = new NoticeService();
     }
 
-    abstract public function handle(): void;
+    /**
+     * Render a view
+     *
+     * @param string $view
+     * @param array $data
+     */
+    protected function render(string $view, array $data = []): void
+    {
+        // Extract variables for the view
+        extract($data);
+
+        // Include view
+        include NEBF_MVC_PATH . 'admin/views/' . $view . '.php';
+    }
 }
