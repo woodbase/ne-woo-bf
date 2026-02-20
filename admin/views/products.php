@@ -233,7 +233,7 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
                                         $web_error = trim((string) ($product['web_price_lookup']['error'] ?? ''));
                                         if (!empty($web_prices) && is_array($web_prices)):
                                         ?>
-                                            <ul style="margin:0; padding-left:18px;">
+                                            <ul class="nebf-extra-web-prices">
                                                 <?php foreach ($web_prices as $match): ?>
                                                     <li>
                                                         <strong><?= esc_html((string) ($match['price'] ?? '')); ?></strong>

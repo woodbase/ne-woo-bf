@@ -173,4 +173,33 @@
 
 .nebf-products-table .nebf-status-icon--not-synced {
     color: #d93025;
+}
+.nebf-sync-options {
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    background: #fff;
+    max-width: 640px;
 }
+
+.nebf-sync-options__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.nebf-sync-options__hint {
+    margin: 8px 0 0;
+}
+
+.nebf-sync-options__warning {
+    margin: 10px 0 0;
+}
+
+.nebf-extra-web-prices {
+    margin: 0;
+    padding-left: 18px;
+}
+

@@ -73,10 +73,18 @@ if ($last_sync_raw !== '' && $last_sync_raw !== null) {
     <form id="nebf-dashboard-sync-form" method="post" style="display:inline-block;">
         <?php wp_nonce_field('nebf_sync_products'); ?>
         <input type="hidden" name="nebf_sync_all" value="1">
-        <label style="display:block; margin-bottom:10px;">
-            <input type="checkbox" name="nebf_sync_web_price_lookup" value="1">
-            <?php esc_html_e('Run web price lookup while loading products', 'nebf-mvc'); ?>
-        </label>
+        <div class="nebf-sync-options">
+            <label class="nebf-sync-options__label">
+                <input id="nebf_sync_web_price_lookup" type="checkbox" name="nebf_sync_web_price_lookup" value="1">
+                <span><?php esc_html_e('Run web price lookup while loading products', 'nebf-mvc'); ?></span>
+            </label>
+            <p class="description nebf-sync-options__hint">
+                <?php esc_html_e('Tip: This can take extra time because each product may require a separate external search request.', 'nebf-mvc'); ?>
+            </p>
+            <div id="nebf_sync_web_price_warning" class="notice notice-warning inline nebf-sync-options__warning" hidden>
+                <p><?php esc_html_e('Price lookup is enabled. Loading products can take significantly longer.', 'nebf-mvc'); ?></p>
+            </div>
+        </div>
         <button
             type="button"
             id="nebf-sync-load-btn"
@@ -102,6 +110,8 @@ if ($last_sync_raw !== '' && $last_sync_raw !== null) {
         var syncButton = document.getElementById('nebf-sync-load-btn');
         var numbers = document.querySelectorAll('.nebf-number');
         var lastSyncText = document.getElementById('nebf-last-sync-text');
+        var webLookupCheckbox = document.getElementById('nebf_sync_web_price_lookup');
+        var webLookupWarning = document.getElementById('nebf_sync_web_price_warning');
 
         function formatLocalDateTime(unixSeconds) {
             var d = new Date(unixSeconds * 1000);
@@ -120,6 +130,15 @@ if ($last_sync_raw !== '' && $last_sync_raw !== null) {
 
         if (!syncForm || !syncButton) {
             return;
+        }
+
+        if (webLookupCheckbox && webLookupWarning) {
+            var toggleLookupWarning = function() {
+                webLookupWarning.hidden = !webLookupCheckbox.checked;
+            };
+
+            webLookupCheckbox.addEventListener('change', toggleLookupWarning);
+            toggleLookupWarning();
         }
 
         if (lastSyncText) {

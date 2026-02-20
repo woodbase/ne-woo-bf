@@ -164,7 +164,15 @@ class ProductRepository
 
             $item['synced'] = $synced_by_bf_id || (!empty($sku) && (bool) wc_get_product_id_by_sku($sku));
             $item['sale_price'] = $this->calculate_sale_price($item);
-            $item['web_price_lookup'] = $this->webPriceLookup->lookup_for_product($item);
+            $lookup = $item['web_price_lookup'] ?? [];
+            $item['web_price_lookup'] = is_array($lookup)
+                ? $lookup
+                : [
+                    'query' => '',
+                    'matches' => [],
+                    'fetched_at' => '',
+                    'error' => '',
+                ];
         }
 
         unset($item);
