@@ -73,6 +73,10 @@ if ($last_sync_raw !== '' && $last_sync_raw !== null) {
     <form id="nebf-dashboard-sync-form" method="post" style="display:inline-block;">
         <?php wp_nonce_field('nebf_sync_products'); ?>
         <input type="hidden" name="nebf_sync_all" value="1">
+        <label style="display:block; margin-bottom:10px;">
+            <input type="checkbox" name="nebf_sync_web_price_lookup" value="1">
+            <?php esc_html_e('Run web price lookup while loading products', 'nebf-mvc'); ?>
+        </label>
         <button
             type="button"
             id="nebf-sync-load-btn"

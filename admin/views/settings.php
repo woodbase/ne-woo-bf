@@ -72,6 +72,18 @@ if (!defined('ABSPATH')) exit;
                 </tr>
 
                 <tr>
+                    <th scope="row"><?php esc_html_e('Web Price Lookup', 'nebf-mvc'); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="nebf_enable_web_price_lookup"
+                                value="1" <?php checked(get_option('nebf_enable_web_price_lookup', 0), 1); ?>>
+                            <?php esc_html_e('Enable external web price lookup in product Extra info.', 'nebf-mvc'); ?>
+                        </label>
+                        <p class="description"><?php esc_html_e("When enabled, prices are fetched when you open the Products tab and shown in each product's Extra info section.", 'nebf-mvc'); ?></p>
+                    </td>
+                </tr>
+
+                <tr>
                     <th scope="row">
                         <label for="nebf_margin_type"><?php esc_html_e('Profit Margin Type', 'nebf-mvc'); ?></label>
                     </th>

@@ -28,6 +28,7 @@ class SettingsController extends AbstractAdminController
             $separate = isset($_POST['nebf_separate_brand']) ? 1 : 0;
             update_option('nebf_separate_brand', $separate);
 
+
             if (isset($_POST['nebf_margin_type'])) {
                 $margin_type = sanitize_key((string) $_POST['nebf_margin_type']);
                 if (!in_array($margin_type, ['percent', 'fixed'], true)) {

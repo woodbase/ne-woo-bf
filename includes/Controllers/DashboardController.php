@@ -4,6 +4,7 @@ namespace NEBF\Controllers;
 
 use NEBF\Models\ProductRepository;
 use NEBF\Services\BeautyFortApiService;
+use NEBF\Services\WebPriceLookupService;
 
 if (!defined('ABSPATH')) exit;
 
@@ -62,6 +63,8 @@ class DashboardController extends AbstractAdminController
             $loaded_count = count($api_products);
             update_option('nebf_last_sync', time());
 
+            $run_web_price_lookup = isset($_POST['nebf_sync_web_price_lookup']) && $_POST['nebf_sync_web_price_lookup'] === '1';
+
             // Respect "Separate Brand" setting.
             $separate = (bool) get_option('nebf_separate_brand', 0);
             foreach ($api_products as &$product) {
@@ -76,6 +79,15 @@ class DashboardController extends AbstractAdminController
                 $product['fullname'] = $name;
             }
             unset($product);
+
+            if ($loaded_count > 0 && $run_web_price_lookup) {
+                $lookup_service = new WebPriceLookupService();
+
+                foreach ($api_products as &$product) {
+                    $product['web_price_lookup'] = $lookup_service->lookup_for_product($product);
+                }
+                unset($product);
+            }
 
             if ($loaded_count > 0) {
                 $repo->save_products($api_products);

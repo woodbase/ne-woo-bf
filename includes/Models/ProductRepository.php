@@ -3,11 +3,19 @@
 namespace NEBF\Models;
 
 use NEBF\Services\ProductSyncService;
+use NEBF\Services\WebPriceLookupService;
 
 if (!defined('ABSPATH')) exit;
 
 class ProductRepository
 {
+    private WebPriceLookupService $webPriceLookup;
+
+    public function __construct()
+    {
+        $this->webPriceLookup = new WebPriceLookupService();
+    }
+
     /**
      * Calculate sale price from cost and pricing settings.
      *
@@ -137,6 +145,7 @@ class ProductRepository
         // Mark synced products
         // ---------------------------
 
+
         foreach ($items as &$item) {
             $bf_id = (string) ($item['bf_id'] ?? '');
             $sku = (string) ($item['sku'] ?? '');
@@ -155,6 +164,15 @@ class ProductRepository
 
             $item['synced'] = $synced_by_bf_id || (!empty($sku) && (bool) wc_get_product_id_by_sku($sku));
             $item['sale_price'] = $this->calculate_sale_price($item);
+            $lookup = $item['web_price_lookup'] ?? [];
+            $item['web_price_lookup'] = is_array($lookup)
+                ? $lookup
+                : [
+                    'query' => '',
+                    'matches' => [],
+                    'fetched_at' => '',
+                    'error' => '',
+                ];
         }
 
         unset($item);
