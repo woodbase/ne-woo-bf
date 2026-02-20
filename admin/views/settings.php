@@ -17,6 +17,8 @@ if (!defined('ABSPATH')) exit;
     <form method="post">
         <?php wp_nonce_field('nebf_save_settings'); ?>
 
+        <?php $selected_currency = get_option('nebf_currency', 'SEK'); ?>
+
         <table class="form-table">
             <tbody>
                 <tr>
@@ -54,6 +56,23 @@ if (!defined('ABSPATH')) exit;
 
                 <tr>
                     <th scope="row">
+                        <label for="nebf_currency"><?php esc_html_e('Currency', 'nebf-mvc'); ?></label>
+                    </th>
+                    <td>
+                        <select name="nebf_currency" id="nebf_currency">
+                            <option value="SEK" <?php selected($selected_currency, 'SEK'); ?>>SEK</option>
+                            <option value="NOK" <?php selected($selected_currency, 'NOK'); ?>>NOK</option>
+                            <option value="DKK" <?php selected($selected_currency, 'DKK'); ?>>DKK</option>
+                            <option value="EUR" <?php selected($selected_currency, 'EUR'); ?>>EUR</option>
+                            <option value="GBP" <?php selected($selected_currency, 'GBP'); ?>>GBP</option>
+                            <option value="USD" <?php selected($selected_currency, 'USD'); ?>>USD</option>
+                        </select>
+                        <p class="description"><?php esc_html_e('Select the currency used by your BeautyFort account. Default is SEK.', 'nebf-mvc'); ?></p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
                         <label for="nebf_margin_type"><?php esc_html_e('Profit Margin Type', 'nebf-mvc'); ?></label>
                     </th>
                     <td>
@@ -76,7 +95,7 @@ if (!defined('ABSPATH')) exit;
                     <td>
                         <input name="nebf_margin_value" type="number" step="0.01" min="0" id="nebf_margin_value"
                             value="<?php echo esc_attr((string) get_option('nebf_margin_value', '0')); ?>" class="small-text">
-                        <p class="description"><?php esc_html_e('Example: 25 means +25% in Percent mode, or +25 currency units in Fixed Amount mode.', 'nebf-mvc'); ?></p>
+                        <p class="description"><?php echo esc_html(sprintf(__('Example: 25 means +25%% in Percent mode, or +25 %s in Fixed Amount mode.', 'nebf-mvc'), $selected_currency)); ?></p>
                     </td>
                 </tr>
 
