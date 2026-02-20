@@ -5,7 +5,7 @@ class NEBF_Markup_Calculator
 {
 
     /**
-     * Beräkna slutpris från cost price + margin + rounding
+     * Calculate final price from cost price + margin + rounding
      *
      * @param float $cost_price
      * @param array $margin ['type'=>'percent|fixed', 'value'=>float]
@@ -22,7 +22,7 @@ class NEBF_Markup_Calculator
     }
 
     /**
-     * Lägg på markup
+     * Apply markup
      */
     private static function apply_markup($cost_price, $margin)
     {
@@ -38,7 +38,7 @@ class NEBF_Markup_Calculator
     }
 
     /**
-     * Avrunda pris enligt inställning
+     * Round price according to setting
      */
     private static function apply_rounding($price, $rounding)
     {

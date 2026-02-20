@@ -17,11 +17,11 @@ jQuery(function ($) {
     }
 
     /* =========================
-       SÖK-indikator
+       SEARCH indicator
     ========================= */
     const $searchInput = $('#nebf-live-search');
 
-    // Skapa indikator om den inte finns
+    // Create indicator if it does not exist
     if (!$('#nebf-search-indicator').length) {
         $('<span id="nebf-search-indicator" style="margin-left:8px; display:none; font-style:italic;">Söker…</span>')
             .insertAfter($searchInput);
@@ -32,7 +32,7 @@ jQuery(function ($) {
        ACCORDION
     ========================= */
     $(document).on('click', 'tr.product-row', function (e) {
-        // Ignorera klick på checkbox eller label
+        // Ignore clicks on checkbox or label
         if ($(e.target).is('input[type="checkbox"], label')) return;
 
         const $row = $(this);
@@ -40,17 +40,17 @@ jQuery(function ($) {
         const $accordion = $('#' + accId);
         if (!$accordion.length) return;
 
-        // Stäng alla andra accordion-rader och ta bort 'is-open' från andra rader
+        // Close all other accordion rows and remove 'is-open' from them
         $('tr.accordion-row').not($accordion).hide();
         $('tr.product-row').not($row).removeClass('is-open');
 
-        // Toggle den klickade raden
+        // Toggle the clicked row
         $accordion.toggle();
         $row.toggleClass('is-open');
     });
 
     /* =========================
-       VÄLJ ALLA / AVMARKERA ALLA
+       SELECT ALL / DESELECT ALL
     ========================= */
     const $selectAllBtn = $('#nebf-select-all');
 
@@ -59,7 +59,7 @@ jQuery(function ($) {
 
         const $checkboxes = $('tr.product-row input[type="checkbox"]');
 
-        // Om minst en inte är markerad → markera alla, annars avmarkera alla
+        // If at least one is unchecked, check all; otherwise uncheck all
         const allChecked = $checkboxes.length === $checkboxes.filter(':checked').length;
 
         if (allChecked) {
@@ -72,7 +72,7 @@ jQuery(function ($) {
     });
 
     /* =========================
-       LIVE-SÖK (3+ tecken)
+       LIVE SEARCH (3+ characters)
     ========================= */
     const handleLiveSearch = nebfDebounce(function () {
         const value = $searchInput.val().toLowerCase();
@@ -91,7 +91,7 @@ jQuery(function ($) {
 
             $row.toggle(match);
 
-            // Stäng detaljer om huvudraden döljs
+            // Close details if the main row is hidden
             if (!match && accId) {
                 $('#' + accId).hide();
             }
@@ -110,19 +110,19 @@ jQuery(function ($) {
     });
 
     /* =========================
-       MARKERA VALD RAD
+       HIGHLIGHT SELECTED ROW
     ========================= */
     $(document).on('change', 'tr.product-row input[type="checkbox"]', function () {
         const $row = $(this).closest('tr.product-row');
         $row.toggleClass('is-selected', this.checked);
 
-        // Uppdatera knapptext dynamiskt
+        // Update button text dynamically
         const $checkboxes = $('tr.product-row input[type="checkbox"]');
         const allChecked = $checkboxes.length === $checkboxes.filter(':checked').length;
         $selectAllBtn.text(allChecked ? 'Avmarkera alla' : 'Välj alla');
     });
 
-    // Om sidan laddas med redan valda checkboxar
+    // If the page loads with pre-selected checkboxes
     $('tr.product-row input[type="checkbox"]:checked').each(function () {
         $(this).closest('tr.product-row').addClass('is-selected');
     });
