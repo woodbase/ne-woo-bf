@@ -105,16 +105,52 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
         <thead>
             <tr>
                 <th><?php _e('Select', 'nebf'); ?></th>
-                <th><?php _e('Status', 'nebf'); ?></th>
+                <th scope="col" aria-sort="none">
+                    <button type="button" class="button-link nebf-sort-trigger" data-sort-key="status" data-sort-type="number">
+                        <?php _e('Status', 'nebf'); ?> <span class="nebf-sort-indicator" aria-hidden="true">↕</span>
+                    </button>
+                </th>
                 <th><?php _e('Image', 'nebf'); ?></th>
-                <th><?php _e('Name', 'nebf'); ?></th>
-                <th><?php _e('SKU', 'nebf'); ?></th>
-                <th><?php _e('Brand', 'nebf'); ?></th>
-                <th><?php _e('Collection', 'nebf'); ?></th>
-                <th><?php _e('Cost price', 'nebf'); ?></th>
-                <th><?php _e('Sale price', 'nebf'); ?></th>
-                <th><?php _e('Margin %', 'nebf'); ?></th>
-                <th><?php _e('Stock', 'nebf'); ?></th>
+                <th scope="col" aria-sort="none">
+                    <button type="button" class="button-link nebf-sort-trigger" data-sort-key="name" data-sort-type="text">
+                        <?php _e('Name', 'nebf'); ?> <span class="nebf-sort-indicator" aria-hidden="true">↕</span>
+                    </button>
+                </th>
+                <th scope="col" aria-sort="none">
+                    <button type="button" class="button-link nebf-sort-trigger" data-sort-key="sku" data-sort-type="text">
+                        <?php _e('SKU', 'nebf'); ?> <span class="nebf-sort-indicator" aria-hidden="true">↕</span>
+                    </button>
+                </th>
+                <th scope="col" aria-sort="none">
+                    <button type="button" class="button-link nebf-sort-trigger" data-sort-key="brand" data-sort-type="text">
+                        <?php _e('Brand', 'nebf'); ?> <span class="nebf-sort-indicator" aria-hidden="true">↕</span>
+                    </button>
+                </th>
+                <th scope="col" aria-sort="none">
+                    <button type="button" class="button-link nebf-sort-trigger" data-sort-key="collection" data-sort-type="text">
+                        <?php _e('Collection', 'nebf'); ?> <span class="nebf-sort-indicator" aria-hidden="true">↕</span>
+                    </button>
+                </th>
+                <th scope="col" aria-sort="none">
+                    <button type="button" class="button-link nebf-sort-trigger" data-sort-key="cost" data-sort-type="number">
+                        <?php _e('Cost price', 'nebf'); ?> <span class="nebf-sort-indicator" aria-hidden="true">↕</span>
+                    </button>
+                </th>
+                <th scope="col" aria-sort="none">
+                    <button type="button" class="button-link nebf-sort-trigger" data-sort-key="sale" data-sort-type="number">
+                        <?php _e('Sale price', 'nebf'); ?> <span class="nebf-sort-indicator" aria-hidden="true">↕</span>
+                    </button>
+                </th>
+                <th scope="col" aria-sort="none">
+                    <button type="button" class="button-link nebf-sort-trigger" data-sort-key="margin" data-sort-type="number">
+                        <?php _e('Margin %', 'nebf'); ?> <span class="nebf-sort-indicator" aria-hidden="true">↕</span>
+                    </button>
+                </th>
+                <th scope="col" aria-sort="none">
+                    <button type="button" class="button-link nebf-sort-trigger" data-sort-key="stock" data-sort-type="number">
+                        <?php _e('Stock', 'nebf'); ?> <span class="nebf-sort-indicator" aria-hidden="true">↕</span>
+                    </button>
+                </th>
                 <th></th>
             </tr>
         </thead>
@@ -125,6 +161,8 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
                 $cost_price = $nebf_float($product['price'] ?? 0);
                 $sale_price = $nebf_float($product['sale_price'] ?? $cost_price); // fallback
                 $calc_margin = $cost_price > 0 ? round((($sale_price - $cost_price) / $cost_price) * 100, 2) : 0;
+                $stock_value = $nebf_scalar($product['stock_level'] ?? null);
+                $stock_sort_value = is_numeric($stock_value) ? (string) (float) $stock_value : strtolower(trim($stock_value));
 
                 $is_imported = !empty($product['synced'] ?? false);
             ?>
@@ -133,7 +171,7 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
                         <input type="checkbox" name="selected_products[]" value="<?= esc_attr($product['bf_id']); ?>">
                         <input type="hidden" name="sale_prices[<?= esc_attr($product['bf_id']); ?>]" value="<?= esc_attr($sale_price); ?>">
                     </td>
-                    <td>
+                    <td data-sort-key="status" data-sort-value="<?= esc_attr($is_imported ? '1' : '0'); ?>">
                         <?php if ($is_imported): ?>
                             <span class="nebf-status-icon nebf-status-icon--synced" role="img" aria-label="<?php esc_attr_e('Synced', 'nebf'); ?>">
                                 <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
@@ -149,14 +187,14 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
                         <?php endif; ?>
                     </td>
                     <td><?= !empty($product['thumbnail_url']) ? '<img src="' . esc_url($product['thumbnail_url']) . '" width="50">' : '—'; ?></td>
-                    <td><?= esc_html($nebf_display($product['fullname'] ?? null)); ?></td>
-                    <td><?= esc_html($nebf_display($product['sku'] ?? null)); ?></td>
-                    <td><?= esc_html($nebf_display($product['brand'] ?? null)); ?></td>
-                    <td><?= esc_html($nebf_display($product['collection'] ?? null)); ?></td>
-                    <td><?= function_exists('wc_price') ? wc_price($cost_price) : esc_html($cost_price); ?></td>
-                    <td><strong><?= function_exists('wc_price') ? wc_price($sale_price) : esc_html($sale_price); ?></strong></td>
-                    <td><?= esc_html($calc_margin); ?>%</td>
-                    <td><?= esc_html($nebf_display($product['stock_level'] ?? null)); ?></td>
+                    <td data-sort-key="name" data-sort-value="<?= esc_attr(strtolower($nebf_scalar($product['fullname'] ?? null))); ?>"><?= esc_html($nebf_display($product['fullname'] ?? null)); ?></td>
+                    <td data-sort-key="sku" data-sort-value="<?= esc_attr(strtolower($nebf_scalar($product['sku'] ?? null))); ?>"><?= esc_html($nebf_display($product['sku'] ?? null)); ?></td>
+                    <td data-sort-key="brand" data-sort-value="<?= esc_attr(strtolower($nebf_scalar($product['brand'] ?? null))); ?>"><?= esc_html($nebf_display($product['brand'] ?? null)); ?></td>
+                    <td data-sort-key="collection" data-sort-value="<?= esc_attr(strtolower($nebf_scalar($product['collection'] ?? null))); ?>"><?= esc_html($nebf_display($product['collection'] ?? null)); ?></td>
+                    <td data-sort-key="cost" data-sort-value="<?= esc_attr((string) $cost_price); ?>"><?= function_exists('wc_price') ? wc_price($cost_price) : esc_html($cost_price); ?></td>
+                    <td data-sort-key="sale" data-sort-value="<?= esc_attr((string) $sale_price); ?>"><strong><?= function_exists('wc_price') ? wc_price($sale_price) : esc_html($sale_price); ?></strong></td>
+                    <td data-sort-key="margin" data-sort-value="<?= esc_attr((string) $calc_margin); ?>"><?= esc_html($calc_margin); ?>%</td>
+                    <td data-sort-key="stock" data-sort-value="<?= esc_attr($stock_sort_value); ?>"><?= esc_html($nebf_display($product['stock_level'] ?? null)); ?></td>
                     <td class="nebf-expand"><span class="dashicons dashicons-arrow-down-alt2"></span></td>
                 </tr>
 
@@ -221,6 +259,7 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
         var selectAllButton = document.getElementById('nebf-select-all');
         var resetSearchButton = document.getElementById('nebf-reset-search');
         var table = document.querySelector('.nebf-products-table');
+        var sortButtons = table ? table.querySelectorAll('.nebf-sort-trigger') : [];
         var defaultSelectAllText = <?php echo wp_json_encode(__('Select all', 'nebf')); ?>;
         var defaultUnselectAllText = <?php echo wp_json_encode(__('Unselect all', 'nebf')); ?>;
 
@@ -272,6 +311,98 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
         if (table) {
             var productRows = table.querySelectorAll('tr.product-row');
             var accordionRows = table.querySelectorAll('tr.accordion-row');
+            var currentSort = {
+                key: null,
+                direction: 'asc'
+            };
+
+            if (sortButtons.length) {
+                var tableBody = table.querySelector('tbody');
+
+                var getSortValue = function(row, key) {
+                    var cell = row.querySelector('[data-sort-key="' + key + '"]');
+                    return cell ? (cell.getAttribute('data-sort-value') || '').trim() : '';
+                };
+
+                var sortTableRows = function(key, type, direction) {
+                    if (!tableBody) {
+                        return;
+                    }
+
+                    var rows = Array.from(tableBody.querySelectorAll('tr.product-row')).map(function(row, index) {
+                        var accordion = row.nextElementSibling && row.nextElementSibling.classList.contains('accordion-row') ? row.nextElementSibling : null;
+                        return {
+                            row: row,
+                            accordion: accordion,
+                            index: index,
+                            value: getSortValue(row, key)
+                        };
+                    });
+
+                    rows.sort(function(a, b) {
+                        var result = 0;
+
+                        if (type === 'number') {
+                            var aValue = parseFloat(a.value);
+                            var bValue = parseFloat(b.value);
+                            aValue = Number.isNaN(aValue) ? Number.NEGATIVE_INFINITY : aValue;
+                            bValue = Number.isNaN(bValue) ? Number.NEGATIVE_INFINITY : bValue;
+                            result = aValue - bValue;
+                        } else {
+                            result = a.value.localeCompare(b.value, undefined, {
+                                numeric: true,
+                                sensitivity: 'base'
+                            });
+                        }
+
+                        if (result === 0) {
+                            result = a.index - b.index;
+                        }
+
+                        return direction === 'asc' ? result : -result;
+                    });
+
+                    rows.forEach(function(entry) {
+                        tableBody.appendChild(entry.row);
+                        if (entry.accordion) {
+                            tableBody.appendChild(entry.accordion);
+                        }
+                    });
+                };
+
+                sortButtons.forEach(function(button) {
+                    button.addEventListener('click', function() {
+                        var sortKey = button.getAttribute('data-sort-key');
+                        var sortType = button.getAttribute('data-sort-type') || 'text';
+                        var nextDirection = 'asc';
+
+                        if (currentSort.key === sortKey && currentSort.direction === 'asc') {
+                            nextDirection = 'desc';
+                        }
+
+                        currentSort = {
+                            key: sortKey,
+                            direction: nextDirection
+                        };
+
+                        sortButtons.forEach(function(otherButton) {
+                            var columnHeader = otherButton.closest('th');
+                            var indicator = otherButton.querySelector('.nebf-sort-indicator');
+                            var isActive = otherButton === button;
+
+                            if (columnHeader) {
+                                columnHeader.setAttribute('aria-sort', isActive ? nextDirection : 'none');
+                            }
+
+                            if (indicator) {
+                                indicator.textContent = !isActive ? '↕' : (nextDirection === 'asc' ? '↑' : '↓');
+                            }
+                        });
+
+                        sortTableRows(sortKey, sortType, nextDirection);
+                    });
+                });
+            }
 
             productRows.forEach(function(row) {
                 row.addEventListener('click', function(event) {
