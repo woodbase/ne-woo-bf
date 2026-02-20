@@ -28,6 +28,9 @@ if ($last_sync_raw !== '' && $last_sync_raw !== null) {
         $last_sync_display = (string) $last_sync_raw;
     }
 }
+
+$web_lookup_status = is_array($web_lookup_status ?? null) ? $web_lookup_status : [];
+$default_web_lookup_enabled = !empty($default_web_lookup_enabled);
 ?>
 
 <div class="nebf-dashboard-cards">
@@ -70,38 +73,59 @@ if ($last_sync_raw !== '' && $last_sync_raw !== null) {
 </div>
 
 <div class="nebf-dashboard-actions">
-    <form id="nebf-dashboard-sync-form" method="post" style="display:inline-block;">
+    <form id="nebf-dashboard-sync-form" class="nebf-dashboard-sync-form" method="post">
         <?php wp_nonce_field('nebf_sync_products'); ?>
         <input type="hidden" name="nebf_sync_all" value="1">
         <div class="nebf-sync-options">
             <label class="nebf-sync-options__label">
-                <input id="nebf_sync_web_price_lookup" type="checkbox" name="nebf_sync_web_price_lookup" value="1">
+                <input
+                    id="nebf_sync_web_price_lookup"
+                    type="checkbox"
+                    name="nebf_sync_web_price_lookup"
+                    value="1"
+                    <?php checked($default_web_lookup_enabled); ?>>
                 <span><?php esc_html_e('Run web price lookup while loading products', 'nebf-mvc'); ?></span>
             </label>
             <p class="description nebf-sync-options__hint">
-                <?php esc_html_e('Tip: This can take extra time because each product may require a separate external search request.', 'nebf-mvc'); ?>
+                <?php esc_html_e('Tip: Price lookup now runs in background batches to reduce server load.', 'nebf-mvc'); ?>
             </p>
             <div id="nebf_sync_web_price_warning" class="notice notice-warning inline nebf-sync-options__warning" hidden>
-                <p><?php esc_html_e('Price lookup is enabled. Loading products can take significantly longer.', 'nebf-mvc'); ?></p>
+                <p><?php esc_html_e('Price lookup is enabled. Results will be fetched in background after products are loaded.', 'nebf-mvc'); ?></p>
             </div>
+            <?php if (!empty($web_lookup_status['in_progress'])): ?>
+                <div class="notice notice-info inline nebf-sync-options__status">
+                    <p>
+                        <?php
+                        echo esc_html(sprintf(
+                            __('Web price lookup is running in background: %1$d/%2$d processed (%3$d pending).', 'nebf-mvc'),
+                            (int) ($web_lookup_status['processed'] ?? 0),
+                            (int) ($web_lookup_status['total'] ?? 0),
+                            (int) ($web_lookup_status['pending'] ?? 0)
+                        ));
+                        ?>
+                    </p>
+                </div>
+            <?php endif; ?>
         </div>
-        <button
-            type="button"
-            id="nebf-sync-load-btn"
-            class="button button-primary"
-            data-label-loading="<?php echo esc_attr__('Loading products...', 'nebf-mvc'); ?>">
-            <span class="nebf-btn-label"><?php esc_html_e('Load Products from BeautyFort', 'nebf-mvc'); ?></span>
-            <span class="nebf-btn-spinner dashicons dashicons-update" aria-hidden="true"></span>
-        </button>
-    </form>
+        <div class="nebf-dashboard-actions__controls">
+            <button
+                type="button"
+                id="nebf-sync-load-btn"
+                class="button button-primary"
+                data-label-loading="<?php echo esc_attr__('Loading products...', 'nebf-mvc'); ?>">
+                <span class="nebf-btn-label"><?php esc_html_e('Load Products from BeautyFort', 'nebf-mvc'); ?></span>
+                <span class="nebf-btn-spinner dashicons dashicons-update" aria-hidden="true"></span>
+            </button>
 
-    <a href="<?php echo esc_url(add_query_arg([
-                    'page' => 'nebf-mvc',
-                    'tab'  => 'products'
-                ], admin_url('admin.php'))); ?>"
-        class="button">
-        <?php esc_html_e('Manage Products', 'nebf-mvc'); ?>
-    </a>
+            <a href="<?php echo esc_url(add_query_arg([
+                            'page' => 'nebf-mvc',
+                            'tab'  => 'products'
+                        ], admin_url('admin.php'))); ?>"
+                class="button">
+                <?php esc_html_e('Manage Products', 'nebf-mvc'); ?>
+            </a>
+        </div>
+    </form>
 </div>
 
 <script>

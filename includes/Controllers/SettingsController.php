@@ -27,6 +27,8 @@ class SettingsController extends AbstractAdminController
             // Checkbox may be unset if unchecked
             $separate = isset($_POST['nebf_separate_brand']) ? 1 : 0;
             update_option('nebf_separate_brand', $separate);
+            $enable_web_lookup = isset($_POST['nebf_enable_web_price_lookup']) ? 1 : 0;
+            update_option('nebf_enable_web_price_lookup', $enable_web_lookup);
 
 
             if (isset($_POST['nebf_margin_type'])) {

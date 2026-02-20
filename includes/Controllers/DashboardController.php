@@ -4,7 +4,7 @@ namespace NEBF\Controllers;
 
 use NEBF\Models\ProductRepository;
 use NEBF\Services\BeautyFortApiService;
-use NEBF\Services\WebPriceLookupService;
+use NEBF\Services\WebPriceLookupQueueService;
 
 if (!defined('ABSPATH')) exit;
 
@@ -16,6 +16,7 @@ class DashboardController extends AbstractAdminController
     public function handle(): void
     {
         $repo = new ProductRepository();
+        $queue_service = new WebPriceLookupQueueService();
 
         if (
             $_SERVER['REQUEST_METHOD'] === 'POST' &&
@@ -80,17 +81,24 @@ class DashboardController extends AbstractAdminController
             }
             unset($product);
 
-            if ($loaded_count > 0 && $run_web_price_lookup) {
-                $lookup_service = new WebPriceLookupService();
-
-                foreach ($api_products as &$product) {
-                    $product['web_price_lookup'] = $lookup_service->lookup_for_product($product);
-                }
-                unset($product);
-            }
-
             if ($loaded_count > 0) {
                 $repo->save_products($api_products);
+
+                if ($run_web_price_lookup) {
+                    $queue_info = $queue_service->enqueue_products($api_products);
+                    $this->notices->add(
+                        sprintf(
+                            __(
+                                'Web price lookup runs in background batches to protect server performance. Added %1$d products to queue (%2$d pending).',
+                                'nebf-mvc'
+                            ),
+                            (int) $queue_info['enqueued'],
+                            (int) $queue_info['pending']
+                        ),
+                        'info'
+                    );
+                }
+
                 $this->notices->add(
                     sprintf(
                         _n(
@@ -129,6 +137,8 @@ class DashboardController extends AbstractAdminController
             'synced_products'   => $synced,
             'unsynced_products' => $total_products - $synced,
             'last_sync'         => get_option('nebf_last_sync'),
+            'web_lookup_status' => $queue_service->get_status(),
+            'default_web_lookup_enabled' => (bool) get_option('nebf_enable_web_price_lookup', 0),
         ]);
     }
 

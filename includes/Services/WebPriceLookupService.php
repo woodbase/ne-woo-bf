@@ -42,7 +42,7 @@ class WebPriceLookupService
         ], 'https://duckduckgo.com/html/');
 
         $response = wp_remote_get($url, [
-            'timeout' => 8,
+            'timeout' => 5,
             'redirection' => 3,
             'headers' => [
                 'User-Agent' => 'Mozilla/5.0 (compatible; NEBF price lookup)',
@@ -144,4 +144,3 @@ class WebPriceLookupService
         ];
     }
 }
-

@@ -1,15 +1,23 @@
 .nebf-dashboard-cards {
-    display: flex;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 14px;
     margin-top: 20px;
 }
 
 .nebf-card {
     background: #fff;
-    padding: 20px;
-    border: 1px solid #ccd0d4;
-    border-radius: 6px;
-    flex: 1;
+    padding: 16px;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.nebf-card h2 {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.35;
+    color: #50575e;
 }
 
 .nebf-number {
@@ -28,10 +36,20 @@
 }
 
 .nebf-dashboard-actions {
-    margin-top: 16px;
+    margin-top: 18px;
+}
+
+.nebf-dashboard-sync-form {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nebf-dashboard-actions__controls {
     display: flex;
+    flex-direction: column;
     gap: 8px;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .nebf-dashboard-actions .button .nebf-btn-spinner {
@@ -173,29 +191,43 @@
 
 .nebf-products-table .nebf-status-icon--not-synced {
     color: #d93025;
-}
+}
+
 .nebf-sync-options {
-    margin: 0 0 10px;
-    padding: 10px 12px;
+    margin: 0;
+    padding: 12px 14px;
     border: 1px solid #dcdcde;
-    border-radius: 6px;
-    background: #fff;
-    max-width: 640px;
+    border-left: 4px solid #72aee6;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    max-width: 720px;
 }
 
 .nebf-sync-options__label {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 600;
+    color: #1d2327;
+    line-height: 1.4;
 }
 
 .nebf-sync-options__hint {
-    margin: 8px 0 0;
+    margin: 8px 0 0 24px;
+    color: #50575e;
+    max-width: 68ch;
 }
 
 .nebf-sync-options__warning {
-    margin: 10px 0 0;
+    margin: 10px 0 0 24px;
+    border-left-color: #dba617;
+    box-shadow: none;
+}
+
+.nebf-sync-options__status {
+    margin: 10px 0 0 24px;
+    border-left-color: #72aee6;
+    box-shadow: none;
 }
 
 .nebf-extra-web-prices {
@@ -203,3 +235,20 @@
     padding-left: 18px;
 }
 
+@media (max-width: 1200px) {
+    .nebf-dashboard-cards {
+        grid-template-columns: repeat(2, minmax(200px, 1fr));
+    }
+}
+
+@media (max-width: 782px) {
+    .nebf-dashboard-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .nebf-sync-options__hint,
+    .nebf-sync-options__warning,
+    .nebf-sync-options__status {
+        margin-left: 0;
+    }
+}
