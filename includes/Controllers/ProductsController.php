@@ -6,6 +6,12 @@ use NEBF\Models\ProductRepository;
 
 if (!defined('ABSPATH')) exit;
 
+/**
+ * Controller for the Products tab.
+ *
+ * Handles filter/search rendering and bulk sync actions
+ * from BeautyFort cache to WooCommerce products.
+ */
 class ProductsController extends AbstractAdminController
 {
 
@@ -19,16 +25,19 @@ class ProductsController extends AbstractAdminController
 
     public function handle(): void
     {
+        // Handle bulk sync submission from the products table.
         if (
             $_SERVER['REQUEST_METHOD'] === 'POST' &&
             isset($_POST['nebf_sync_selected']) &&
             check_admin_referer('nebf_sync_selected_products')
         ) {
+            // Normalize selected BeautyFort IDs.
             $bf_ids = array_values(array_filter(array_map(
                 'sanitize_text_field',
                 (array) ($_POST['selected_products'] ?? [])
             )));
 
+            // Normalize sale prices keyed by BeautyFort ID.
             $sale_prices = [];
             if (isset($_POST['sale_prices']) && is_array($_POST['sale_prices'])) {
                 foreach ($_POST['sale_prices'] as $bf_id => $sale_price) {
@@ -75,6 +84,7 @@ class ProductsController extends AbstractAdminController
             }
         }
 
+        // Read and sanitize current paging/filter state.
         $page       = (int) ($_GET['paged'] ?? 1);
         $per_page   = max(1, min(500, (int) ($_GET['per_page'] ?? 20)));
         $search     = $_GET['s'] ?? '';
@@ -84,8 +94,10 @@ class ProductsController extends AbstractAdminController
             'status'     => $_GET['status'] ?? '',
         ];
 
+        // Query paginated products for the view.
         $products = $this->repo->get_paginated($page, $per_page, $search, $filters);
 
+        // Render product table view data.
         $this->render('products', [
             'products'    => $products,
             'page'        => $products['page'] ?? $page,

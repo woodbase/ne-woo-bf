@@ -2,7 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 /**
- * Hanterar POST-actions för inställningssidan
+ * Handles POST actions for the settings page
  */
 add_action('admin_init', 'nebf_handle_settings_actions');
 
@@ -11,7 +11,7 @@ function nebf_handle_settings_actions()
     if (!isset($_POST['nebf_action'])) return;
 
     // ==============================
-    // IMPORT PRODUKTER
+    // IMPORT PRODUCTS
     // ==============================
     if ($_POST['nebf_action'] === 'import_products') {
 

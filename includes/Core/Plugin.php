@@ -16,11 +16,11 @@ class Plugin {
      */
     public function init(): void
     {
-        // Register admin menu
+        // Register plugin admin menu and page routes.
         $admin_menu = new AdminMenuController();
         $admin_menu->register_hooks();
 
-        // Enqueue admin assets (CSS/JS)
+        // Enqueue admin assets (CSS/JS) only when needed.
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     }
 
@@ -31,7 +31,7 @@ class Plugin {
     {
         $screen = get_current_screen();
 
-        // Only load for our plugin page
+        // Only load assets on this plugin's admin screens.
         if ($screen && str_contains($screen->id, 'nebf-mvc')) {
         wp_enqueue_style(
             'nebf-admin',
@@ -39,9 +39,8 @@ class Plugin {
             [],
             NEBF_MVC_VERSION
         );
-    
 
-            // Om du senare vill ha JS:
+            // If needed later, enqueue JS here as well.
             // wp_enqueue_script(
             //     'nebf-admin-js',
             //     NEBF_MVC_URL . 'admin/assets/js/admin.js',

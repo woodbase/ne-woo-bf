@@ -4,7 +4,7 @@ function nebf_render_settings_tab()
     $last_fetch       = get_option('nebf_last_fetch');
     $last_fetch_count = get_option('nebf_last_fetch_count');
 
-    // Visa notices efter redirect
+    // Show notices after redirect
     if (isset($_GET['nebf_notice'])) {
         $type = $_GET['nebf_notice'] === 'success'
             ? 'notice-success'

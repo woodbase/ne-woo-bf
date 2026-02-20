@@ -6,7 +6,7 @@ require_once plugin_dir_path(__FILE__) . 'pricing-page.php';
 require_once plugin_dir_path(__FILE__) . 'pricing-actions.php';
 
 /**
- * Registrera inställningar
+ * Register settings
  */
 add_action('admin_init', function () {
     register_setting(
@@ -45,7 +45,7 @@ add_action('admin_init', function () {
 });
 
 /**
- * Rendera admin-sidan
+ * Render admin page
  */
 function nebf_admin_page()
 {

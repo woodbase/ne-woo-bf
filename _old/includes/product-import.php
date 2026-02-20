@@ -6,7 +6,7 @@ function nebf_import_products()
 {
     error_log('NEBF: Starting product import from BeautyFort API');
 
-    // Hämta data från BeautyFort
+    // Fetch data from BeautyFort
     $rows = nebf_api_request_stockfile();
 
     if (is_wp_error($rows)) {
@@ -51,7 +51,7 @@ function nebf_import_products()
             'stock_level' => $stock,
             'price' => isset($row['Price']) ? (float)$row['Price'] : 0,
 
-            // Produktdata
+            // Product data
             'barcode' => $row['Barcode'] ?? '',
             'brand'   => $brand,
             'category' => $row['Category'] ?? '',
@@ -68,18 +68,18 @@ function nebf_import_products()
             'thumbnail_url'    => $row['ThumbnailImageUrl'] ?? '',
             'image_last_updated' => $row['ImageLastUpdated'] ?? '',
 
-            // Historik
+            // History
             'last_purchased_date' => $row['LastPurchasedDate'] ?? '',
             'last_purchased_price' => $row['LastPurchasedPrice'] ?? '',
             'your_rating'       => $row['YourRating'] ?? '',
             'your_stock_code'   => $row['YourStockCode'] ?? '',
 
-            // Alltid rådata
+            // Always raw data
             'raw' => $row,
         ];
     }
 
-    // --- Spara alltid i DB ---
+    // --- Always save in DB ---
     update_option('nebf_beautyfort_products', $products);
 
     error_log('NEBF: Cached products in DB: ' . count($products));

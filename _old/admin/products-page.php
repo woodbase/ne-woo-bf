@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) exit;
 function nebf_render_products_page()
 {
 
-    // --- Hämta produkter från DB ---
+    // --- Fetch products from DB ---
     if (function_exists('nebf_get_cached_products')) {
         $products = nebf_get_cached_products();
     } else {
@@ -36,19 +36,19 @@ function nebf_render_products_page()
     }
 
 
-    // --- Pagination & sortering ---
+    // --- Pagination & sorting ---
     $per_page = isset($_GET['per_page']) ? max(1, (int) $_GET['per_page']) : 100;
     $page     = isset($_GET['paged']) ? max(1, (int) $_GET['paged']) : 1;
     $orderby  = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'fullname';
     $order    = isset($_GET['order']) ? strtoupper($_GET['order']) : 'ASC';
 
-    // --- Filter & sök ---
+    // --- Filter & search ---
     $search        = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
     $brand_f       = isset($_GET['brand']) ? sanitize_text_field($_GET['brand']) : '';
     $collection_f  = isset($_GET['collection']) ? sanitize_text_field($_GET['collection']) : '';
     $status_f      = isset($_GET['status']) ? sanitize_text_field($_GET['status']) : '';
 
-    // --- Dropdown-data ---
+    // --- Dropdown data ---
     $brands      = array_unique(array_filter(array_column($products, 'brand')));
     sort($brands);
     $collections = array_unique(array_filter(array_column($products, 'collection')));
@@ -57,7 +57,7 @@ function nebf_render_products_page()
     // --- FILTER ---
     $products = array_filter($products, function ($product) use ($search, $brand_f, $collection_f, $status_f) {
 
-        // Statusfilter
+        // Status filter
         if ($status_f) {
             $existing = get_posts([
                 'post_type'  => 'product',
@@ -71,13 +71,13 @@ function nebf_render_products_page()
             if ($status_f === 'not_imported' && $is_imported) return false;
         }
 
-        // Varumärke
+        // Brand
         if ($brand_f && strcasecmp($product['brand'] ?? '', $brand_f) !== 0) return false;
 
-        // Kollektion
+        // Collection
         if ($collection_f && strcasecmp($product['collection'] ?? '', $collection_f) !== 0) return false;
 
-        // Sök
+        // Search
         if ($search) {
             $haystack = strtolower(
                 ($product['fullname'] ?? '') . ' ' .
@@ -90,7 +90,7 @@ function nebf_render_products_page()
         return true;
     });
 
-    // --- SORTERING ---
+    // --- SORTING ---
     usort($products, function ($a, $b) use ($orderby, $order) {
         if ($orderby === 'status') {
             $valA = !empty(get_posts(['post_type' => 'product', 'meta_key' => '_beautyfort_id', 'meta_value' => $a['bf_id'], 'fields' => 'ids'])) ? 1 : 0;
@@ -117,7 +117,7 @@ function nebf_render_products_page()
 
 ?>
     <!-- ========================= -->
-    <!-- FORMULÄR / FILTER -->
+    <!-- FORM / FILTER -->
     <form method="get" style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
         <input type="hidden" name="page" value="<?= esc_attr($_GET['page'] ?? '') ?>">
         <input type="number" name="per_page" value="<?= esc_attr($per_page) ?>" min="1" max="500">
@@ -151,7 +151,7 @@ function nebf_render_products_page()
         Synka till WooCommerce
     </button>
     <!-- ========================= -->
-    <!-- PRODUKTTABELL -->
+    <!-- PRODUCT TABLE -->
     <table class="widefat striped nebf-products-table">
         <thead>
             <tr>
@@ -160,8 +160,8 @@ function nebf_render_products_page()
                 <th>Bild</th>
                 <th><?= nebf_sort_link('fullname', $orderby, $order, 'Namn'); ?></th>
                 <th><?= nebf_sort_link('sku', $orderby, $order, 'SKU'); ?></th>
-                <th><?= nebf_sort_link('brand', $orderby, $order, 'Varumärke'); ?></th>
-                <th><?= nebf_sort_link('collection', $orderby, $order, 'Kollektion'); ?></th>
+                <th><?= nebf_sort_link('brand', $orderby, $order, 'Brand'); ?></th>
+                <th><?= nebf_sort_link('collection', $orderby, $order, 'Collection'); ?></th>
                 <th><?= nebf_sort_link('price', $orderby, $order, 'Kostpris'); ?></th>
                 <th>Försäljningspris</th>
                 <th>Marginal %</th>
@@ -180,12 +180,12 @@ function nebf_render_products_page()
                 $is_imported = nebf_is_product_synced($product['sku']); //!empty($existing);
                 $accordion_id = 'acc-' . $i;
 
-                // --- Beräkna försäljningspris och marginal ---
+                // --- Calculate sale price and margin ---
                 $cost_price = floatval($product['price'] ?? 0);
                 $margin_data = NEBF_Pricing_Engine::get_margin_data($product['bf_id']);
                 $sale_price  = NEBF_Pricing_Engine::calculate_price($product['bf_id'], $cost_price);
 
-                // Marginal i % (för display)
+                // Margin in % (for display)
                 $calc_margin = $cost_price > 0 ? round((($sale_price - $cost_price) / $cost_price) * 100, 2) : 0;
             ?>
                 <tr class="product-row" data-accordion="<?= esc_attr($accordion_id); ?>">
