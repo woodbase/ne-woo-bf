@@ -112,8 +112,15 @@ class BeautyFortApiService
 
         $trace['step'] = 'soap_parse';
         libxml_use_internal_errors(true);
-        $soapXml = simplexml_load_string((string) $body);
-        if (!$soapXml) {
+
+
+$xml_debug = simplexml_load_string($body);
+$ns = $xml_debug->getNamespaces(true);
+
+$soap = $xml_debug->children($ns['SOAP-ENV']);
+
+        $soapXml = simplexml_load_string($body);
+        if (!$soap) {
             $trace['stage'] = 'invalid_soap_xml';
             $trace['libxml_errors'] = $this->collect_libxml_errors();
             $trace['body_head_hex'] = bin2hex(substr((string) $body, 0, 32));
