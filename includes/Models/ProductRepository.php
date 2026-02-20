@@ -145,6 +145,7 @@ class ProductRepository
         // Mark synced products
         // ---------------------------
 
+
         foreach ($items as &$item) {
             $bf_id = (string) ($item['bf_id'] ?? '');
             $sku = (string) ($item['sku'] ?? '');
