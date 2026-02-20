@@ -6,7 +6,7 @@ class NEBF_Pricing_Engine
 
     /*
     |--------------------------------------------------------------------------
-    | Beräkna pris för en produkt
+    | Calculate price for a product
     |--------------------------------------------------------------------------
     */
     public static function calculate_price($product_id, $cost_price)
@@ -22,7 +22,7 @@ class NEBF_Pricing_Engine
 
     /*
     |--------------------------------------------------------------------------
-    | Hämta margin-data (override eller global)
+    | Get margin data (override or global)
     |--------------------------------------------------------------------------
     */
     public static function get_margin_data($product_id)
@@ -56,7 +56,7 @@ class NEBF_Pricing_Engine
 
     /*
     |--------------------------------------------------------------------------
-    | Recalculate en produkt
+    | Recalculate one product
     |--------------------------------------------------------------------------
     */
     public static function recalculate_product($product_id)
@@ -76,7 +76,7 @@ class NEBF_Pricing_Engine
 
     /*
     |--------------------------------------------------------------------------
-    | Recalculate alla produkter
+    | Recalculate all products
     |--------------------------------------------------------------------------
     */
     public static function recalculate_all_products()
@@ -96,7 +96,7 @@ class NEBF_Pricing_Engine
 
     /*
     |--------------------------------------------------------------------------
-    | Hämta inställningar (global)
+    | Get settings (global)
     |--------------------------------------------------------------------------
     */
     public static function get_settings()

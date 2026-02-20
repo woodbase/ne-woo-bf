@@ -75,6 +75,7 @@ class BeautyFortApiService
             . '<bf:StockFileEncoding>UTF-8</bf:StockFileEncoding>'
             . '</bf:GetStockFileRequest></soap:Body></soap:Envelope>';
 
+        // Send SOAP request to BeautyFort endpoint.
         $response = wp_remote_post('https://www.beautyfort.com/api/soap', [
             'headers' => [
                 'Content-Type' => 'text/xml; charset=UTF-8',
@@ -211,6 +212,11 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
         return '';
     }
 
+    /**
+     * Collect and clear libxml parser errors for debug tracing.
+     *
+     * @return array<int, string>
+     */
     private function collect_libxml_errors(): array
     {
         $errors = [];
@@ -221,6 +227,9 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
         return $errors;
     }
 
+    /**
+     * Persist sanitized API debug trace in options for support/debugging.
+     */
     private function store_debug_trace(array $trace): void
     {
         $safe = $trace;
@@ -347,6 +356,9 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
         return $stockXml;
     }
 
+    /**
+     * Persist a bounded snapshot of the raw API response body.
+     */
     private function store_raw_response_snapshot(array $trace, string $body): void
     {
         $snapshot = [
