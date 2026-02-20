@@ -225,6 +225,34 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
                                     <th><?php _e('BF ID', 'nebf'); ?></th>
                                     <td><?= esc_html($nebf_display($product['bf_id'] ?? null, '')); ?></td>
                                 </tr>
+                                <tr>
+                                    <th><?php _e('Extra info', 'nebf'); ?></th>
+                                    <td>
+                                        <?php
+                                        $web_prices = $product['web_price_lookup']['matches'] ?? [];
+                                        $web_error = trim((string) ($product['web_price_lookup']['error'] ?? ''));
+                                        if (!empty($web_prices) && is_array($web_prices)):
+                                        ?>
+                                            <ul style="margin:0; padding-left:18px;">
+                                                <?php foreach ($web_prices as $match): ?>
+                                                    <li>
+                                                        <strong><?= esc_html((string) ($match['price'] ?? '')); ?></strong>
+                                                        <?php if (!empty($match['source'])): ?>
+                                                            — <?= esc_html((string) $match['source']); ?>
+                                                        <?php endif; ?>
+                                                        <?php if (!empty($match['url'])): ?>
+                                                            (<a href="<?= esc_url((string) $match['url']); ?>" target="_blank" rel="noopener noreferrer"><?php _e('Open', 'nebf'); ?></a>)
+                                                        <?php endif; ?>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        <?php elseif ($web_error !== ''): ?>
+                                            <?= esc_html($web_error); ?>
+                                        <?php else: ?>
+                                            <?= esc_html__('No external web prices found.', 'nebf-mvc'); ?>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </td>
