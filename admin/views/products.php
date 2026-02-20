@@ -60,10 +60,10 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
 
 <!-- ========================= -->
 <!-- FILTER FORM -->
-<form id="nebf-products-filter-form" method="get" style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+<form id="nebf-products-filter-form" class="nebf-products-filter-form" method="get">
     <input type="hidden" name="page" value="nebf-mvc">
     <input type="hidden" name="tab" value="products">
-    <input type="number" name="per_page" value="<?= esc_attr($_GET['per_page'] ?? 20) ?>" min="1" max="500">
+    <input class="nebf-products-filter-form__per-page" type="number" name="per_page" value="<?= esc_attr($_GET['per_page'] ?? 20) ?>" min="1" max="500">
     <input id="nebf-products-search" type="search" name="s" placeholder="<?php _e('Search name / SKU / brand', 'nebf'); ?>" value="<?= esc_attr($search_term); ?>">
 
     <select name="brand">
@@ -95,9 +95,11 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
 <!-- SYNC FORM -->
 <form method="POST">
     <?php wp_nonce_field('nebf_sync_selected_products'); ?>
-    <button type="submit" name="nebf_sync_selected" class="button button-primary">
-        <?php _e('Sync to WooCommerce', 'nebf'); ?>
-    </button>
+    <div class="nebf-products-actions nebf-products-actions--top">
+        <button type="submit" name="nebf_sync_selected" class="button button-primary">
+            <?php _e('Sync to WooCommerce', 'nebf'); ?>
+        </button>
+    </div>
 
     <!-- ========================= -->
     <!-- PRODUCTS TABLE -->
@@ -231,9 +233,11 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
         </tbody>
     </table>
 
-    <button type="submit" name="nebf_sync_selected" class="button button-primary">
-        <?php _e('Sync to WooCommerce', 'nebf'); ?>
-    </button>
+    <div class="nebf-products-actions nebf-products-actions--bottom">
+        <button type="submit" name="nebf_sync_selected" class="button button-primary">
+            <?php _e('Sync to WooCommerce', 'nebf'); ?>
+        </button>
+    </div>
 </form>
 
 <!-- PAGINATION -->

@@ -112,6 +112,34 @@
 
 /* Active tab styling is handled by WP 'nav-tab-active' class */
 
+.nebf-products-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 6px;
+    align-items: center;
+}
+
+.nebf-products-filter-form__per-page {
+    width: 88px;
+}
+
+.nebf-products-actions {
+    margin: 0 0 10px;
+}
+
+.nebf-products-actions--bottom {
+    margin-top: 12px;
+}
+
+.nebf-products-table {
+    margin-top: 0;
+}
+
 /* Products accordion */
 .nebf-products-table tr.product-row .nebf-expand {
     cursor: pointer;
