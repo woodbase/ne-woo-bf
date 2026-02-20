@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) exit;
  */
 class SettingsController extends AbstractAdminController
 {
+    private const ALLOWED_CURRENCIES = ['SEK', 'NOK', 'DKK', 'EUR', 'GBP', 'USD'];
 
     public function handle(): void
     {
@@ -40,11 +41,24 @@ class SettingsController extends AbstractAdminController
                 update_option('nebf_margin_value', max(0, $margin_value));
             }
 
+            if (isset($_POST['nebf_currency'])) {
+                $currency = strtoupper(sanitize_text_field((string) $_POST['nebf_currency']));
+                if (!in_array($currency, self::ALLOWED_CURRENCIES, true)) {
+                    $currency = 'SEK';
+                }
+
+                update_option('nebf_currency', $currency);
+            }
+
             // Feedback notice
             add_action('admin_notices', function () {
                 echo '<div class="notice notice-success is-dismissible"><p>'
                     . esc_html__('Settings saved successfully.', 'nebf-mvc') . '</p></div>';
             });
+        }
+
+        if (!get_option('nebf_currency')) {
+            update_option('nebf_currency', 'SEK');
         }
 
         $this->render('settings');
