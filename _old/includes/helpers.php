@@ -2,11 +2,11 @@
 if (!defined('ABSPATH')) exit;
 
 /**
- * Hjälpfunktioner för Beauty Fort
+ * Helper functions for BeautyFort
  */
 
 /**
- * Statusikon för produkt
+ * Status icon for product
  */
 function nebf_get_status_icon($status)
 {
@@ -21,7 +21,7 @@ function nebf_get_status_icon($status)
 }
 
 /**
- * Thumbnail för produkt
+ * Thumbnail for product
  */
 function nebf_get_product_thumbnail($product, $size = 'thumbnail')
 {
@@ -37,7 +37,7 @@ function nebf_get_product_thumbnail($product, $size = 'thumbnail')
 }
 
 /**
- * Renderar produktdetaljer
+ * Renders product details
  */
 function nebf_render_product_details($product)
 {
@@ -88,7 +88,7 @@ function nebf_render_product_details($product)
 }
 
 /**
- * Hämtar produkter från WooCommerce
+ * Fetches products from WooCommerce
  */
 function nebf_get_wc_products($args = [])
 {
@@ -119,7 +119,7 @@ function nebf_get_wc_products($args = [])
             'weight'     => $product->get_weight(),
             'categories' => wc_get_product_category_list($product->get_id()),
             'permalink'  => get_edit_post_link($product->get_id()),
-            'raw'        => $product, // för detaljvisning
+            'raw'        => $product, // for detail view
         ];
     }
 
@@ -127,7 +127,7 @@ function nebf_get_wc_products($args = [])
 }
 
 /**
- * Rensar produktnamn från varumärke
+ * Cleans product name from brand
  */
 function nebf_clean_product_name($name, $brand)
 {
@@ -143,7 +143,7 @@ function nebf_clean_product_name($name, $brand)
 }
 
 /**
- * Formaterar ett fält (sträng eller array)
+ * Formats a field (string or array)
  */
 function nebf_format_field($field)
 {
@@ -155,7 +155,7 @@ function nebf_format_field($field)
 }
 
 /**
- * Genererar sorteringslänk för tabellkolumner
+ * Generates sorting link for table columns
  */
 function nebf_sort_link($column, $current_orderby, $current_order, $label)
 {

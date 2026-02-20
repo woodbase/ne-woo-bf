@@ -83,7 +83,7 @@ function nebf_api_request_stockfile()
     $response = $bf->GetStockFileResponse ?? null;
 
 if (!$response) {
-    // Om Fault finns, logga och returnera error
+    // If Fault exists, log and return error
     if (isset($bodyChildren->Fault)) {
         error_log('BeautyFort SOAP Fault: ' . print_r($bodyChildren->Fault, true));
         return new WP_Error('soap_fault', 'BeautyFort API returnerade ett fel.');
@@ -92,7 +92,7 @@ if (!$response) {
     return new WP_Error('no_response', 'Hittade inget GetStockFileResponse i SOAP-svaret.');
 }
 
-// Nu vet vi att File finns
+// At this point we know File exists
 $encodedFile = (string) $response->File;
 $decodedXml = base64_decode($encodedFile, true);
 
@@ -107,7 +107,7 @@ if (!$stockXml) {
 return $stockXml;
 
 
-    // Räcker att verifiera att vi fick ett giltigt stockfile
+    // It is enough to verify that we received a valid stockfile
     if (!isset($stockXml->item)) {
         return new WP_Error(
             'invalid_stockfile',

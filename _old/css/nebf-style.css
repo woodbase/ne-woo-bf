@@ -1,5 +1,5 @@
 /* =========================
-   Huvudrad
+   Main row
    ========================= */
 .nebf-products-table tr.product-row {
     cursor: pointer;
@@ -10,24 +10,24 @@
     background-color: #eef6ff;
 }
 
-/* Markerad rad (checkbox vald) */
+/* Selected row (checkbox checked) */
 .nebf-products-table tr.product-row.is-selected {
     background-color: #e6f4ea !important;
 }
 
-/* Extra tydlig vänsterkant */
+/* Extra visible left border */
 .nebf-products-table tr.product-row.is-selected td:first-child {
     box-shadow: inset 4px 0 0 #46b450;
 }
 
-/* Öppen rad */
+/* Open row */
 .product-row.is-selected {
     background: #e8f2ff;
     box-shadow: inset 3px 0 0 #2271b1;
 }
 
 /* =========================
-   Accordion-tabell
+   Accordion table
    ========================= */
 .nebf-inner-table {
     width: 100%;
@@ -50,7 +50,7 @@
 }
 
 /* =========================
-   Status-pill
+   Status pill
    ========================= */
 .status-pill {
     display: inline-block;
@@ -82,14 +82,14 @@
     color: #2271b1;
 }
 
-/* Standard chevron: pekar höger */
+/* Default chevron: points right */
 .product-row .dashicons {
     transition: transform 0.2s ease;
     display: inline-block;
-    transform: rotate(-90deg); /* pekar åt höger initialt */
+    transform: rotate(-90deg); /* points right initially */
 }
 
-/* Öppen rad: pekar nedåt */
+/* Open row: points down */
 .product-row.is-open .dashicons {
-    transform: rotate(0deg); /* pekar nedåt */
+    transform: rotate(0deg); /* points down */
 }
