@@ -40,16 +40,16 @@
 }
 
 .nebf-dashboard-sync-form {
-    display: inline-flex;
-    flex-direction: column;
-    gap: 10px;
+    display: block;
 }
 
 .nebf-dashboard-actions__controls {
     display: flex;
-    flex-direction: column;
     gap: 8px;
-    align-items: flex-start;
+    flex-wrap: wrap;
+    align-items: center;
+    clear: both;
+    margin-top: 10px;
 }
 
 .nebf-dashboard-actions .button .nebf-btn-spinner {

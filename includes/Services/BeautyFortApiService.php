@@ -112,15 +112,8 @@ class BeautyFortApiService
 
         $trace['step'] = 'soap_parse';
         libxml_use_internal_errors(true);
-
-
-$xml_debug = simplexml_load_string($body);
-$ns = $xml_debug->getNamespaces(true);
-
-$soap = $xml_debug->children($ns['SOAP-ENV']);
-
         $soapXml = simplexml_load_string($body);
-        if (!$soap) {
+        if (!$soapXml) {
             $trace['stage'] = 'invalid_soap_xml';
             $trace['libxml_errors'] = $this->collect_libxml_errors();
             $trace['body_head_hex'] = bin2hex(substr((string) $body, 0, 32));
@@ -130,28 +123,26 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
 
         $trace['step'] = 'soap_namespaces';
         $namespaces = $soapXml->getNamespaces(true);
-        $soapNs = $namespaces['SOAP-ENV'] ?? ($namespaces['soap'] ?? null);
-        $bfNs = $namespaces['ns1'] ?? ($namespaces['bf'] ?? null);
-
-        if (!$soapNs || !$bfNs) {
-            $trace['stage'] = 'missing_namespaces';
+        $soapBody = $this->extract_soap_body($soapXml, $namespaces);
+        if (!$soapBody instanceof \SimpleXMLElement) {
+            $trace['stage'] = 'missing_soap_body';
+            $trace['namespaces'] = $namespaces;
             $this->store_debug_trace($trace);
-            return new \WP_Error('no_response', __('Could not locate SOAP namespaces in response.', 'nebf-mvc'));
+            return new \WP_Error('no_response', __('Could not locate SOAP Body in response.', 'nebf-mvc'));
         }
 
         $trace['step'] = 'soap_response_node';
-        $soap = $soapXml->children($soapNs);
-        $soapBody = $soap->Body;
-        $bf = $soapBody->children($bfNs);
-        $stockResponse = $bf->GetStockFileResponse ?? null;
+        $stockResponse = $this->extract_stock_response_node($soapBody, $namespaces);
 
-        if (!$stockResponse) {
+        if (!$stockResponse instanceof \SimpleXMLElement) {
             $trace['stage'] = 'missing_getstockfileresponse';
+            $trace['namespaces'] = $namespaces;
             $this->store_debug_trace($trace);
             return new \WP_Error('no_response', __('Could not find GetStockFileResponse in SOAP response.', 'nebf-mvc'));
         }
 
         $trace['step'] = 'soap_file_decode';
+        $bfNs = $this->detect_bf_namespace($namespaces);
         $encodedFile = $this->extract_file_payload($stockResponse, (string) $bfNs);
         if ($encodedFile === '') {
             $trace['stage'] = 'missing_file_node';
@@ -180,6 +171,79 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
         $trace['stage'] = 'success';
         $this->store_debug_trace($trace);
         return $stockXml;
+    }
+
+    /**
+     * Extract SOAP Body regardless of prefix naming.
+     */
+    private function extract_soap_body(\SimpleXMLElement $soapXml, array $namespaces): ?\SimpleXMLElement
+    {
+        $soapNs = $namespaces['SOAP-ENV'] ?? ($namespaces['soap'] ?? ($namespaces['env'] ?? null));
+        if (is_string($soapNs) && $soapNs !== '') {
+            $soap = $soapXml->children($soapNs);
+            if ($soap instanceof \SimpleXMLElement && isset($soap->Body)) {
+                return $soap->Body;
+            }
+        }
+
+        $nodes = $soapXml->xpath('//*[local-name()="Body"]');
+        if (is_array($nodes) && !empty($nodes) && $nodes[0] instanceof \SimpleXMLElement) {
+            return $nodes[0];
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract GetStockFileResponse regardless of namespace prefixes.
+     */
+    private function extract_stock_response_node(\SimpleXMLElement $soapBody, array $namespaces): ?\SimpleXMLElement
+    {
+        $bfNs = $this->detect_bf_namespace($namespaces);
+        if ($bfNs !== '') {
+            $bf = $soapBody->children($bfNs);
+            if ($bf instanceof \SimpleXMLElement && isset($bf->GetStockFileResponse)) {
+                return $bf->GetStockFileResponse;
+            }
+        }
+
+        if (isset($soapBody->GetStockFileResponse)) {
+            return $soapBody->GetStockFileResponse;
+        }
+
+        $nodes = $soapBody->xpath('.//*[local-name()="GetStockFileResponse"]');
+        if (is_array($nodes) && !empty($nodes) && $nodes[0] instanceof \SimpleXMLElement) {
+            return $nodes[0];
+        }
+
+        return null;
+    }
+
+    /**
+     * Pick a likely BeautyFort namespace URI if present.
+     */
+    private function detect_bf_namespace(array $namespaces): string
+    {
+        $known = $namespaces['ns1'] ?? ($namespaces['bf'] ?? '');
+        if (is_string($known) && $known !== '') {
+            return $known;
+        }
+
+        foreach ($namespaces as $uri) {
+            if (!is_string($uri) || $uri === '') {
+                continue;
+            }
+
+            if (stripos($uri, 'schemas.xmlsoap.org/soap/envelope') !== false) {
+                continue;
+            }
+
+            if (stripos($uri, 'beautyfort.com') !== false) {
+                return $uri;
+            }
+        }
+
+        return '';
     }
 
     /**
