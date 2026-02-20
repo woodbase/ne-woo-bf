@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: NE BeautyFort Woo MVC
- * Description: MVC refactor of the BeautyFort WooCommerce integration.
+ * Plugin Name: NE BeautyFort Woo
+ * Description: BeautyFort WooCommerce integration.
  * Version: 1.0.0
  * Author: Nordic Equilibro
  * Text Domain: nebf-mvc
