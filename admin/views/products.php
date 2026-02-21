@@ -225,6 +225,25 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
                                     <th><?php _e('BF ID', 'nebf'); ?></th>
                                     <td><?= esc_html($nebf_display($product['bf_id'] ?? null, '')); ?></td>
                                 </tr>
+                                <tr>
+                                    <th><?php _e('Online price', 'nebf'); ?></th>
+                                    <td>
+                                        <?php
+                                        $web_price = $product['web_price'] ?? null;
+                                        $web_price_currency = strtoupper(trim($nebf_scalar($product['web_price_currency'] ?? get_option('nebf_currency', 'SEK'))));
+
+                                        if (is_numeric($web_price)) {
+                                            if (function_exists('wc_price')) {
+                                                echo wp_kses_post(wc_price((float) $web_price, ['currency' => $web_price_currency]));
+                                            } else {
+                                                echo esc_html(number_format((float) $web_price, 2, '.', '')) . ' ' . esc_html($web_price_currency);
+                                            }
+                                        } else {
+                                            echo '—';
+                                        }
+                                        ?>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </td>

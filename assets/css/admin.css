@@ -53,6 +53,11 @@
     opacity: 0.9;
 }
 
+.nebf-dashboard-option {
+    margin: 0 0 8px;
+    line-height: 1.4;
+}
+
 @keyframes nebf-spin {
     from {
         transform: rotate(0deg);

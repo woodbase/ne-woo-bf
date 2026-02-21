@@ -4,6 +4,7 @@ namespace NEBF\Controllers;
 
 use NEBF\Models\ProductRepository;
 use NEBF\Services\BeautyFortApiService;
+use NEBF\Services\WebPriceLookupQueueService;
 
 if (!defined('ABSPATH')) exit;
 
@@ -21,6 +22,7 @@ class DashboardController extends AbstractAdminController
             isset($_POST['nebf_sync_all']) &&
             check_admin_referer('nebf_sync_products')
         ) {
+            $lookup_online_prices = isset($_POST['nebf_lookup_online_prices']) && (string) $_POST['nebf_lookup_online_prices'] === '1';
             $load_failed = false;
 
             $api_products = $this->fetch_products_from_api();
@@ -91,6 +93,38 @@ class DashboardController extends AbstractAdminController
                     ),
                     'success'
                 );
+
+                if ($lookup_online_prices) {
+                    try {
+                        $queue_service = new WebPriceLookupQueueService();
+                        $queued_count = $queue_service->enqueue_products($api_products);
+
+                        if ($queued_count > 0) {
+                            $this->notices->add(
+                                sprintf(
+                                    _n(
+                                        '%d product queued for online price lookup in background.',
+                                        '%d products queued for online price lookup in background.',
+                                        $queued_count,
+                                        'nebf-mvc'
+                                    ),
+                                    $queued_count
+                                ),
+                                'info'
+                            );
+                        } else {
+                            $this->notices->add(
+                                __('No products were queued for online price lookup.', 'nebf-mvc'),
+                                'warning'
+                            );
+                        }
+                    } catch (\Throwable $e) {
+                        $this->notices->add(
+                            __('Products were imported, but online price lookup could not be queued.', 'nebf-mvc'),
+                            'warning'
+                        );
+                    }
+                }
             } elseif (!$load_failed) {
                 $this->notices->add(
                     __('No products were loaded. Check API credentials in Settings and try again.', 'nebf-mvc'),
