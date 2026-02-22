@@ -23,6 +23,10 @@ class AdminPageRouter {
                 $controller = new ProductsController();
                 break;
 
+            case 'online-lookup':
+                $controller = new OnlineLookupController();
+                break;
+
             case 'settings':
                 $controller = new SettingsController();
                 break;
@@ -59,6 +63,11 @@ class AdminPageRouter {
                 <a href="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=settings')); ?>"
                    class="nav-tab <?php echo $active_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
                     <?php esc_html_e('Settings', 'nebf-mvc'); ?>
+                </a>
+
+                <a href="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=online-lookup')); ?>"
+                   class="nav-tab <?php echo $active_tab === 'online-lookup' ? 'nav-tab-active' : ''; ?>">
+                    <?php esc_html_e('Online Lookup', 'nebf-mvc'); ?>
                 </a>
             </h2>
         </div>

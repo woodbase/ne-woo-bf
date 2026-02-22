@@ -11,6 +11,8 @@ if (!defined('ABSPATH')) {
  */
 class WebPriceLookupService
 {
+    private const OPTION_NAME_OVERRIDES = 'nebf_web_price_lookup_name_overrides';
+
     public function lookup_and_store(string $bf_id): bool
     {
         $bf_id = sanitize_text_field($bf_id);
@@ -24,12 +26,23 @@ class WebPriceLookupService
         }
 
         $product = $products[$bf_id];
+        $name_override = $this->get_name_override($bf_id);
+        $original_name = (string) ($product['fullname'] ?? '');
+        $lookup_name = $name_override !== '' ? $name_override : $original_name;
+        $brand = (string) ($product['brand'] ?? '');
+        $sku = (string) ($product['sku'] ?? '');
+        $barcode = (string) ($product['barcode'] ?? '');
+        $search_query = trim(implode(' ', array_filter([$lookup_name, $brand, $barcode])));
+
         $payload = [
             'bf_id' => $bf_id,
-            'sku' => (string) ($product['sku'] ?? ''),
-            'name' => (string) ($product['fullname'] ?? ''),
-            'brand' => (string) ($product['brand'] ?? ''),
-            'barcode' => (string) ($product['barcode'] ?? ''),
+            'sku' => $sku,
+            'name' => $lookup_name,
+            'original_name' => $original_name,
+            'brand' => $brand,
+            'barcode' => $barcode,
+            'search_name_override' => $name_override,
+            'search_query' => $search_query,
         ];
 
         // Integrators can provide a real online lookup implementation via this filter.
@@ -55,10 +68,21 @@ class WebPriceLookupService
 
         $product['web_price_lookup_status'] = $status;
         $product['web_price_lookup_updated_at'] = time();
+        $product['web_price_lookup_query'] = $search_query;
 
         $products[$bf_id] = $product;
         update_option('nebf_beautyfort_products', $products, false);
 
         return true;
+    }
+
+    private function get_name_override(string $bf_id): string
+    {
+        $overrides = get_option(self::OPTION_NAME_OVERRIDES, []);
+        if (!is_array($overrides)) {
+            return '';
+        }
+
+        return sanitize_text_field((string) ($overrides[$bf_id] ?? ''));
     }
 }

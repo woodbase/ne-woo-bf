@@ -306,6 +306,10 @@ $lookup_last_run_text = $lookup_last_run_at > 0 ? wp_date($lookup_datetime_forma
                                         ?>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <th><?php _e('Online lookup query', 'nebf-mvc'); ?></th>
+                                    <td><?= esc_html($nebf_display($product['web_price_lookup_query'] ?? null, '—')); ?></td>
+                                </tr>
                             </tbody>
                         </table>
                     </td>
