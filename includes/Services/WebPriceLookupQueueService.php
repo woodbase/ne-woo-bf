@@ -132,6 +132,26 @@ class WebPriceLookupQueueService
     }
 
     /**
+     * @return array{queued:int,last_run_at:int,processed:int,failed:int,remaining:int}
+     */
+    public function get_status(): array
+    {
+        $queue = $this->get_queue();
+        $last_run = get_option(self::OPTION_LAST_RUN, []);
+        if (!is_array($last_run)) {
+            $last_run = [];
+        }
+
+        return [
+            'queued' => count($queue),
+            'last_run_at' => (int) ($last_run['timestamp'] ?? 0),
+            'processed' => (int) ($last_run['processed'] ?? 0),
+            'failed' => (int) ($last_run['failed'] ?? 0),
+            'remaining' => (int) ($last_run['remaining'] ?? count($queue)),
+        ];
+    }
+
+    /**
      * @return array<int, string>
      */
     private function get_queue(): array

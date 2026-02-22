@@ -8,6 +8,7 @@ $page        = $page ?? 1;
 $total_pages = $total_pages ?? 1;
 $search_term = $search_term ?? '';
 $filters     = $filters ?? ['brand' => '', 'collection' => '', 'status' => ''];
+$lookup_status = is_array($lookup_status ?? null) ? $lookup_status : [];
 
 // --- Prepare dropdown options ---
 $brands      = array_unique(array_filter(array_column($items, 'brand')));
@@ -57,6 +58,39 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
 ?>
 
 <?php $this->notices->display(); ?>
+<?php
+$lookup_queued = (int) ($lookup_status['queued'] ?? 0);
+$lookup_last_run_at = (int) ($lookup_status['last_run_at'] ?? 0);
+$lookup_last_run_text = $lookup_last_run_at > 0 ? wp_date('d-m-Y H:i', $lookup_last_run_at, wp_timezone()) : '';
+?>
+<?php if ($lookup_queued > 0): ?>
+    <div class="notice notice-info">
+        <p>
+            <?php
+            echo esc_html(sprintf(
+                _n(
+                    'Online price lookup is running in background. %d product remains in queue.',
+                    'Online price lookup is running in background. %d products remain in queue.',
+                    $lookup_queued,
+                    'nebf-mvc'
+                ),
+                $lookup_queued
+            ));
+            ?>
+        </p>
+    </div>
+<?php elseif ($lookup_last_run_at > 0): ?>
+    <div class="notice notice-success">
+        <p>
+            <?php
+            echo esc_html__('Online price lookup is complete. You can now see found prices under Extra information.', 'nebf-mvc');
+            if ($lookup_last_run_text !== '') {
+                echo ' ' . esc_html(sprintf(__('Last update: %s', 'nebf-mvc'), $lookup_last_run_text));
+            }
+            ?>
+        </p>
+    </div>
+<?php endif; ?>
 
 <!-- ========================= -->
 <!-- FILTER FORM -->

@@ -3,6 +3,7 @@
 namespace NEBF\Controllers;
 
 use NEBF\Models\ProductRepository;
+use NEBF\Services\WebPriceLookupQueueService;
 
 if (!defined('ABSPATH')) exit;
 
@@ -96,6 +97,7 @@ class ProductsController extends AbstractAdminController
 
         // Query paginated products for the view.
         $products = $this->repo->get_paginated($page, $per_page, $search, $filters);
+        $lookup_status = (new WebPriceLookupQueueService())->get_status();
 
         // Render product table view data.
         $this->render('products', [
@@ -104,6 +106,7 @@ class ProductsController extends AbstractAdminController
             'total_pages' => $products['total_pages'] ?? 1,
             'search_term' => $search,
             'filters'     => $filters,
+            'lookup_status' => $lookup_status,
         ]);
     }
 }

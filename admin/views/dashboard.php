@@ -70,7 +70,7 @@ if ($last_sync_raw !== '' && $last_sync_raw !== null) {
 </div>
 
 <div class="nebf-dashboard-actions">
-    <form id="nebf-dashboard-sync-form" method="post" style="display:inline-block;">
+    <form id="nebf-dashboard-sync-form" class="nebf-dashboard-sync-form" method="post">
         <?php wp_nonce_field('nebf_sync_products'); ?>
         <input type="hidden" name="nebf_sync_all" value="1">
         <p class="nebf-dashboard-option">
@@ -79,23 +79,25 @@ if ($last_sync_raw !== '' && $last_sync_raw !== null) {
                 <?php esc_html_e('Search online prices in background after import', 'nebf-mvc'); ?>
             </label>
         </p>
-        <button
-            type="button"
-            id="nebf-sync-load-btn"
-            class="button button-primary"
-            data-label-loading="<?php echo esc_attr__('Loading products...', 'nebf-mvc'); ?>">
-            <span class="nebf-btn-label"><?php esc_html_e('Load Products from BeautyFort', 'nebf-mvc'); ?></span>
-            <span class="nebf-btn-spinner dashicons dashicons-update" aria-hidden="true"></span>
-        </button>
-    </form>
+        <div class="nebf-dashboard-actions__buttons">
+            <button
+                type="button"
+                id="nebf-sync-load-btn"
+                class="button button-primary"
+                data-label-loading="<?php echo esc_attr__('Loading products...', 'nebf-mvc'); ?>">
+                <span class="nebf-btn-label"><?php esc_html_e('Load Products from BeautyFort', 'nebf-mvc'); ?></span>
+                <span class="nebf-btn-spinner dashicons dashicons-update" aria-hidden="true"></span>
+            </button>
 
-    <a href="<?php echo esc_url(add_query_arg([
-                    'page' => 'nebf-mvc',
-                    'tab'  => 'products'
-                ], admin_url('admin.php'))); ?>"
-        class="button">
-        <?php esc_html_e('Manage Products', 'nebf-mvc'); ?>
-    </a>
+            <a href="<?php echo esc_url(add_query_arg([
+                            'page' => 'nebf-mvc',
+                            'tab'  => 'products'
+                        ], admin_url('admin.php'))); ?>"
+                class="button">
+                <?php esc_html_e('Manage Products', 'nebf-mvc'); ?>
+            </a>
+        </div>
+    </form>
 </div>
 
 <script>

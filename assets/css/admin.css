@@ -29,7 +29,18 @@
 
 .nebf-dashboard-actions {
     margin-top: 16px;
+}
+
+.nebf-dashboard-sync-form {
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.nebf-dashboard-actions__buttons {
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
 }
