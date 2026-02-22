@@ -61,7 +61,9 @@ $nebf_float = static function ($value, float $default = 0.0) use ($nebf_scalar):
 <?php
 $lookup_queued = (int) ($lookup_status['queued'] ?? 0);
 $lookup_last_run_at = (int) ($lookup_status['last_run_at'] ?? 0);
-$lookup_last_run_text = $lookup_last_run_at > 0 ? wp_date('d-m-Y H:i', $lookup_last_run_at, wp_timezone()) : '';
+$lookup_date_format = trim((string) get_option('date_format', 'Y-m-d'));
+$lookup_datetime_format = $lookup_date_format !== '' ? ($lookup_date_format . ' H:i') : 'Y-m-d H:i';
+$lookup_last_run_text = $lookup_last_run_at > 0 ? wp_date($lookup_datetime_format, $lookup_last_run_at, wp_timezone()) : '';
 ?>
 <?php if ($lookup_queued > 0): ?>
     <div class="notice notice-info">
@@ -260,7 +262,7 @@ $lookup_last_run_text = $lookup_last_run_at > 0 ? wp_date('d-m-Y H:i', $lookup_l
                                     <td><?= esc_html($nebf_display($product['bf_id'] ?? null, '')); ?></td>
                                 </tr>
                                 <tr>
-                                    <th><?php _e('Online price', 'nebf'); ?></th>
+                                    <th><?php _e('Online price', 'nebf-mvc'); ?></th>
                                     <td>
                                         <?php
                                         $web_price = $product['web_price'] ?? null;
@@ -279,16 +281,25 @@ $lookup_last_run_text = $lookup_last_run_at > 0 ? wp_date('d-m-Y H:i', $lookup_l
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th><?php _e('Online lookup status', 'nebf'); ?></th>
+                                    <th><?php _e('Online lookup status', 'nebf-mvc'); ?></th>
                                     <td>
                                         <?php
-                                        $lookup_status_text = trim($nebf_scalar($product['web_price_lookup_status'] ?? ''));
+                                        $lookup_status_raw = trim($nebf_scalar($product['web_price_lookup_status'] ?? ''));
                                         $lookup_updated_at = (int) ($product['web_price_lookup_updated_at'] ?? 0);
                                         $lookup_updated_text = $lookup_updated_at > 0
-                                            ? wp_date('d-m-Y H:i', $lookup_updated_at, wp_timezone())
+                                            ? wp_date($lookup_datetime_format, $lookup_updated_at, wp_timezone())
                                             : '';
 
-                                        echo esc_html($lookup_status_text !== '' ? $lookup_status_text : '—');
+                                        $lookup_status_label = '—';
+                                        if ($lookup_status_raw === 'ok') {
+                                            $lookup_status_label = __('Found price', 'nebf-mvc');
+                                        } elseif ($lookup_status_raw === 'no_result') {
+                                            $lookup_status_label = __('No result', 'nebf-mvc');
+                                        } elseif ($lookup_status_raw !== '') {
+                                            $lookup_status_label = $lookup_status_raw;
+                                        }
+
+                                        echo esc_html($lookup_status_label);
                                         if ($lookup_updated_text !== '') {
                                             echo ' (' . esc_html($lookup_updated_text) . ')';
                                         }
