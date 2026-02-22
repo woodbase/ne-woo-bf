@@ -278,6 +278,23 @@ $lookup_last_run_text = $lookup_last_run_at > 0 ? wp_date('d-m-Y H:i', $lookup_l
                                         ?>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <th><?php _e('Online lookup status', 'nebf'); ?></th>
+                                    <td>
+                                        <?php
+                                        $lookup_status_text = trim($nebf_scalar($product['web_price_lookup_status'] ?? ''));
+                                        $lookup_updated_at = (int) ($product['web_price_lookup_updated_at'] ?? 0);
+                                        $lookup_updated_text = $lookup_updated_at > 0
+                                            ? wp_date('d-m-Y H:i', $lookup_updated_at, wp_timezone())
+                                            : '';
+
+                                        echo esc_html($lookup_status_text !== '' ? $lookup_status_text : '—');
+                                        if ($lookup_updated_text !== '') {
+                                            echo ' (' . esc_html($lookup_updated_text) . ')';
+                                        }
+                                        ?>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </td>

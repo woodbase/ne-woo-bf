@@ -15,10 +15,12 @@ class WebPriceLookupQueueService
     private const OPTION_QUEUE = 'nebf_web_price_lookup_queue';
     private const OPTION_LAST_RUN = 'nebf_web_price_lookup_last_run';
     private const LOCK_KEY = 'nebf_web_price_lookup_lock';
+    private const ADMIN_FALLBACK_THROTTLE_KEY = 'nebf_web_price_lookup_admin_tick';
 
     public function register_hooks(): void
     {
         add_action(self::CRON_HOOK, [$this, 'process_batch']);
+        add_action('admin_init', [$this, 'maybe_process_batch_in_admin']);
     }
 
     /**
@@ -129,6 +131,31 @@ class WebPriceLookupQueueService
         } finally {
             delete_transient(self::LOCK_KEY);
         }
+    }
+
+    /**
+     * Fallback runner for environments where WP-Cron is not triggered reliably.
+     */
+    public function maybe_process_batch_in_admin(): void
+    {
+        if (!is_admin() || wp_doing_ajax()) {
+            return;
+        }
+
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        if (get_transient(self::ADMIN_FALLBACK_THROTTLE_KEY)) {
+            return;
+        }
+
+        if (empty($this->get_queue())) {
+            return;
+        }
+
+        set_transient(self::ADMIN_FALLBACK_THROTTLE_KEY, 1, 15);
+        $this->process_batch();
     }
 
     /**
