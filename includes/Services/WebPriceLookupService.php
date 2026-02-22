@@ -12,16 +12,36 @@ if (!defined('ABSPATH')) {
 class WebPriceLookupService
 {
     private const OPTION_NAME_OVERRIDES = 'nebf_web_price_lookup_name_overrides';
+    /** @var array<string,string>|null */
+    private ?array $name_overrides_cache = null;
 
     public function lookup_and_store(string $bf_id): bool
+    {
+        $products = get_option('nebf_beautyfort_products', []);
+        if (!is_array($products)) {
+            $products = [];
+        }
+
+        $ok = $this->lookup_and_apply($bf_id, $products);
+        if ($ok) {
+            update_option('nebf_beautyfort_products', $products, false);
+        }
+
+        return $ok;
+    }
+
+    /**
+     * Apply lookup result to the provided product array in memory.
+     *
+     * @param array<string, array<string, mixed>> $products
+     */
+    public function lookup_and_apply(string $bf_id, array &$products): bool
     {
         $bf_id = sanitize_text_field($bf_id);
         if ($bf_id === '') {
             return false;
         }
-
-        $products = get_option('nebf_beautyfort_products', []);
-        if (!is_array($products) || !isset($products[$bf_id]) || !is_array($products[$bf_id])) {
+        if (!isset($products[$bf_id]) || !is_array($products[$bf_id])) {
             return false;
         }
 
@@ -71,18 +91,17 @@ class WebPriceLookupService
         $product['web_price_lookup_query'] = $search_query;
 
         $products[$bf_id] = $product;
-        update_option('nebf_beautyfort_products', $products, false);
 
         return true;
     }
 
     private function get_name_override(string $bf_id): string
     {
-        $overrides = get_option(self::OPTION_NAME_OVERRIDES, []);
-        if (!is_array($overrides)) {
-            return '';
+        if ($this->name_overrides_cache === null) {
+            $overrides = get_option(self::OPTION_NAME_OVERRIDES, []);
+            $this->name_overrides_cache = is_array($overrides) ? $overrides : [];
         }
 
-        return sanitize_text_field((string) ($overrides[$bf_id] ?? ''));
+        return sanitize_text_field((string) ($this->name_overrides_cache[$bf_id] ?? ''));
     }
 }

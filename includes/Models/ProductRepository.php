@@ -8,6 +8,11 @@ if (!defined('ABSPATH')) exit;
 
 class ProductRepository
 {
+    /** @var array<string,bool> */
+    private array $synced_bf_cache = [];
+    /** @var array<string,bool> */
+    private array $synced_sku_cache = [];
+
     /**
      * Calculate sale price from cost and pricing settings.
      *
@@ -52,23 +57,20 @@ class ProductRepository
         // Apply search + filters
         // ---------------------------
 
-        $products = array_filter($products, function ($product) use ($search, $filters) {
-            $bf_id = (string) ($product['bf_id'] ?? '');
-            $sku = (string) ($product['sku'] ?? '');
-            $synced_by_bf_id = false;
+        foreach ($products as &$product) {
+            if (!is_array($product)) {
+                continue;
+            }
+            $product['synced'] = $this->is_product_synced($product);
+        }
+        unset($product);
 
-            if ($bf_id !== '') {
-                $existing = get_posts([
-                    'post_type'   => 'product',
-                    'meta_key'    => '_beautyfort_id',
-                    'meta_value'  => $bf_id,
-                    'fields'      => 'ids',
-                    'numberposts' => 1,
-                ]);
-                $synced_by_bf_id = !empty($existing);
+        $products = array_filter($products, function ($product) use ($search, $filters) {
+            if (!is_array($product)) {
+                return false;
             }
 
-            $is_synced = $synced_by_bf_id || (!empty($sku) && (bool) wc_get_product_id_by_sku($sku));
+            $is_synced = !empty($product['synced']);
 
             // Status filter
             if (!empty($filters['status'])) {
@@ -138,22 +140,9 @@ class ProductRepository
         // ---------------------------
 
         foreach ($items as &$item) {
-            $bf_id = (string) ($item['bf_id'] ?? '');
-            $sku = (string) ($item['sku'] ?? '');
-            $synced_by_bf_id = false;
-
-            if ($bf_id !== '') {
-                $existing = get_posts([
-                    'post_type'   => 'product',
-                    'meta_key'    => '_beautyfort_id',
-                    'meta_value'  => $bf_id,
-                    'fields'      => 'ids',
-                    'numberposts' => 1,
-                ]);
-                $synced_by_bf_id = !empty($existing);
+            if (!isset($item['synced'])) {
+                $item['synced'] = $this->is_product_synced($item);
             }
-
-            $item['synced'] = $synced_by_bf_id || (!empty($sku) && (bool) wc_get_product_id_by_sku($sku));
             $item['sale_price'] = $this->calculate_sale_price($item);
         }
 
@@ -259,5 +248,55 @@ class ProductRepository
             'synced' => $synced,
             'failed' => $failed,
         ];
+    }
+
+    private function is_product_synced(array $product): bool
+    {
+        $bf_id = (string) ($product['bf_id'] ?? '');
+        $sku = (string) ($product['sku'] ?? '');
+
+        return $this->is_synced_by_bf_id($bf_id) || $this->is_synced_by_sku($sku);
+    }
+
+    private function is_synced_by_bf_id(string $bf_id): bool
+    {
+        $bf_id = trim($bf_id);
+        if ($bf_id === '') {
+            return false;
+        }
+
+        if (array_key_exists($bf_id, $this->synced_bf_cache)) {
+            return $this->synced_bf_cache[$bf_id];
+        }
+
+        $existing = get_posts([
+            'post_type'   => 'product',
+            'meta_key'    => '_beautyfort_id',
+            'meta_value'  => $bf_id,
+            'fields'      => 'ids',
+            'numberposts' => 1,
+        ]);
+
+        $is_synced = !empty($existing);
+        $this->synced_bf_cache[$bf_id] = $is_synced;
+
+        return $is_synced;
+    }
+
+    private function is_synced_by_sku(string $sku): bool
+    {
+        $sku = trim($sku);
+        if ($sku === '') {
+            return false;
+        }
+
+        if (array_key_exists($sku, $this->synced_sku_cache)) {
+            return $this->synced_sku_cache[$sku];
+        }
+
+        $is_synced = (bool) wc_get_product_id_by_sku($sku);
+        $this->synced_sku_cache[$sku] = $is_synced;
+
+        return $is_synced;
     }
 }

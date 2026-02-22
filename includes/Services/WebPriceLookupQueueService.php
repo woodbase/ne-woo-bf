@@ -105,11 +105,15 @@ class WebPriceLookupQueueService
             $remaining = array_slice($queue, $batch_size);
 
             $lookup_service = new WebPriceLookupService();
+            $products = get_option('nebf_beautyfort_products', []);
+            if (!is_array($products)) {
+                $products = [];
+            }
             $processed = 0;
             $failed = 0;
 
             foreach ($batch as $bf_id) {
-                $ok = $lookup_service->lookup_and_store((string) $bf_id);
+                $ok = $lookup_service->lookup_and_apply((string) $bf_id, $products);
                 if ($ok) {
                     $processed++;
                 } else {
@@ -117,6 +121,7 @@ class WebPriceLookupQueueService
                 }
             }
 
+            update_option('nebf_beautyfort_products', $products, false);
             update_option(self::OPTION_QUEUE, array_values($remaining), false);
             update_option(self::OPTION_LAST_RUN, [
                 'timestamp' => time(),
@@ -143,6 +148,12 @@ class WebPriceLookupQueueService
         }
 
         if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        // Keep fallback work scoped to this plugin's admin pages.
+        $page = sanitize_key((string) ($_GET['page'] ?? ''));
+        if ($page !== 'nebf-mvc') {
             return;
         }
 
