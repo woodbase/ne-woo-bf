@@ -4,7 +4,7 @@
 [![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=for-the-badge&logo=wordpress&logoColor=white)](https://wordpress.org)
 [![WooCommerce](https://img.shields.io/badge/WooCommerce-7.0%2B-7f54b3?style=for-the-badge&logo=woocommerce&logoColor=white)](https://woocommerce.com)
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-777bb4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net)
-[![License](https://img.shields.io/badge/license-Apache--2.0-10b981?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)](LICENSE)
 
 A WordPress plugin for the first public release of the **BeautyFort ↔ WooCommerce** integration.
 
@@ -58,4 +58,4 @@ This release provides a stable baseline for product import and synchronization b
 - `languages/` – translation files
 
 ## 📄 License
-Apache-2.0 (see `LICENSE`).
+MIT (see `LICENSE`).

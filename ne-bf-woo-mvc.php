@@ -7,8 +7,6 @@
  * Requires PHP: 8.0
  * Requires Plugins: woocommerce
  * WC requires at least: 7.0
- * License: Apache-2.0
- * License URI: https://www.apache.org/licenses/LICENSE-2.0
  * Author: Nordic Equilibro
  * Text Domain: nebf-mvc
  * Domain Path: /languages
