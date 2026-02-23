@@ -12,6 +12,13 @@ if (!defined('ABSPATH')) {
 class DefaultWebPriceLookupProvider
 {
     private const MAX_CRAWL_RESULTS = 5;
+    private const SEARCH_ENDPOINT_HTML = 'https://html.duckduckgo.com/html/';
+    private const SEARCH_ENDPOINT_LITE = 'https://lite.duckduckgo.com/lite/';
+    /** @var array<int,string> */
+    private const USER_AGENTS = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    ];
 
     public function register_hooks(): void
     {
@@ -41,48 +48,56 @@ class DefaultWebPriceLookupProvider
             ];
         }
 
-        $search_url = add_query_arg([
-            'q' => $query,
-            'kl' => 'se-sv',
-            'kp' => '-2',
-        ], 'https://html.duckduckgo.com/html/');
-
-        $response = wp_remote_get($search_url, [
-            'timeout' => 20,
-            'redirection' => 5,
-            'headers' => [
-                'User-Agent' => 'Mozilla/5.0 (compatible; NEBF-PriceLookup/1.0; +https://wordpress.org)',
-                'Accept-Language' => 'sv-SE,sv;q=0.9,en;q=0.8',
-            ],
-        ]);
-
+        $search_request = $this->fetch_search_response($query);
+        $search_url = (string) ($search_request['url'] ?? '');
+        $search_source = (string) ($search_request['source'] ?? 'duckduckgo');
+        $search_attempts = is_array($search_request['attempts'] ?? null) ? $search_request['attempts'] : [];
+        $response = $search_request['response'] ?? null;
         if (is_wp_error($response)) {
             return [
-                'source' => 'duckduckgo-html',
+                'source' => $search_source,
                 'url' => $search_url,
                 'debug' => [
                     'stage' => 'http_error',
                     'error' => sanitize_text_field($response->get_error_message()),
+                    'attempts' => $search_attempts,
                 ],
             ];
         }
 
-        $http_code = (int) wp_remote_retrieve_response_code($response);
-        $html = (string) wp_remote_retrieve_body($response);
+        if (!is_array($response)) {
+            return [
+                'source' => $search_source,
+                'url' => $search_url,
+                'debug' => [
+                    'stage' => 'search_failed',
+                    'attempts' => $search_attempts,
+                ],
+            ];
+        }
 
+        $http_code = (int) ($search_request['http_code'] ?? wp_remote_retrieve_response_code($response));
+        $html = (string) ($search_request['body'] ?? wp_remote_retrieve_body($response));
         if ($html === '') {
             return [
-                'source' => 'duckduckgo-html',
+                'source' => $search_source,
                 'url' => $search_url,
                 'debug' => [
                     'stage' => 'empty_body',
                     'http_code' => $http_code,
+                    'attempts' => $search_attempts,
                 ],
             ];
         }
 
         $result_urls = $this->extract_result_urls($html);
-        $crawl_found = $this->crawl_result_pages_for_price($result_urls);
+        $crawl_stats = [
+            'attempted' => 0,
+            'http_403' => 0,
+            'http_other_non_2xx' => 0,
+            'http_error' => 0,
+        ];
+        $crawl_found = $this->crawl_result_pages_for_price($result_urls, $crawl_stats);
         if ($crawl_found !== null) {
             return [
                 'price' => $crawl_found['price'],
@@ -95,6 +110,9 @@ class DefaultWebPriceLookupProvider
                     'result_count' => count($result_urls),
                     'matched_url' => $crawl_found['url'],
                     'match' => $crawl_found['match'],
+                    'search_source' => $search_source,
+                    'search_attempts' => $search_attempts,
+                    'crawl_stats' => $crawl_stats,
                 ],
             ];
         }
@@ -109,6 +127,9 @@ class DefaultWebPriceLookupProvider
                     'http_code' => $http_code,
                     'result_count' => count($result_urls),
                     'crawl_urls' => array_slice($result_urls, 0, self::MAX_CRAWL_RESULTS),
+                    'search_source' => $search_source,
+                    'search_attempts' => $search_attempts,
+                    'crawl_stats' => $crawl_stats,
                     'body_head' => sanitize_text_field(substr(wp_strip_all_tags($html), 0, 200)),
                 ],
             ];
@@ -123,6 +144,9 @@ class DefaultWebPriceLookupProvider
                 'stage' => 'ok_serp_fallback',
                 'http_code' => $http_code,
                 'result_count' => count($result_urls),
+                'search_source' => $search_source,
+                'search_attempts' => $search_attempts,
+                'crawl_stats' => $crawl_stats,
                 'match' => $found['match'],
             ],
         ];
@@ -177,36 +201,42 @@ class DefaultWebPriceLookupProvider
 
     /**
      * @param array<int,string> $urls
+     * @param array<string,int> $stats
      * @return array{price: float, currency: string, match: string, url: string}|null
      */
-    private function crawl_result_pages_for_price(array $urls): ?array
+    private function crawl_result_pages_for_price(array $urls, array &$stats): ?array
     {
         $urls = array_slice($urls, 0, self::MAX_CRAWL_RESULTS);
         foreach ($urls as $url) {
-            $response = wp_remote_get($url, [
-                'timeout' => 15,
-                'redirection' => 5,
-                'headers' => [
-                    'User-Agent' => 'Mozilla/5.0 (compatible; NEBF-PriceLookup/1.0; +https://wordpress.org)',
-                    'Accept-Language' => 'sv-SE,sv;q=0.9,en;q=0.8',
-                ],
-            ]);
+            $stats['attempted'] = (int) ($stats['attempted'] ?? 0) + 1;
+            $request = $this->request_with_retry($url, 15, self::SEARCH_ENDPOINT_HTML);
+            $response = $request['response'] ?? null;
 
             if (is_wp_error($response)) {
+                $stats['http_error'] = (int) ($stats['http_error'] ?? 0) + 1;
+                continue;
+            }
+            if (!is_array($response)) {
+                $stats['http_error'] = (int) ($stats['http_error'] ?? 0) + 1;
                 continue;
             }
 
-            $http_code = (int) wp_remote_retrieve_response_code($response);
+            $http_code = (int) ($request['http_code'] ?? wp_remote_retrieve_response_code($response));
+            if ($http_code === 403) {
+                $stats['http_403'] = (int) ($stats['http_403'] ?? 0) + 1;
+                continue;
+            }
             if ($http_code < 200 || $http_code >= 400) {
+                $stats['http_other_non_2xx'] = (int) ($stats['http_other_non_2xx'] ?? 0) + 1;
                 continue;
             }
 
-            $content_type = strtolower((string) wp_remote_retrieve_header($response, 'content-type'));
+            $content_type = strtolower((string) ($request['content_type'] ?? wp_remote_retrieve_header($response, 'content-type')));
             if ($content_type !== '' && !str_contains($content_type, 'text/html')) {
                 continue;
             }
 
-            $html = (string) wp_remote_retrieve_body($response);
+            $html = (string) ($request['body'] ?? wp_remote_retrieve_body($response));
             if ($html === '') {
                 continue;
             }
@@ -225,6 +255,145 @@ class DefaultWebPriceLookupProvider
         }
 
         return null;
+    }
+
+    /**
+     * @return array{source:string,url:string,response:mixed,http_code:int,body:string,content_type:string,attempts:array<int,array<string,mixed>>}
+     */
+    private function fetch_search_response(string $query): array
+    {
+        $endpoints = [
+            [
+                'source' => 'duckduckgo-html',
+                'url' => (string) add_query_arg([
+                    'q' => $query,
+                    'kl' => 'se-sv',
+                    'kp' => '-2',
+                ], self::SEARCH_ENDPOINT_HTML),
+            ],
+            [
+                'source' => 'duckduckgo-lite',
+                'url' => (string) add_query_arg([
+                    'q' => $query,
+                    'kl' => 'se-sv',
+                ], self::SEARCH_ENDPOINT_LITE),
+            ],
+        ];
+
+        $attempts = [];
+        $last = [
+            'source' => 'duckduckgo-html',
+            'url' => (string) $endpoints[0]['url'],
+            'response' => null,
+            'http_code' => 0,
+            'body' => '',
+            'content_type' => '',
+            'attempts' => [],
+        ];
+
+        foreach ($endpoints as $endpoint) {
+            $source = (string) $endpoint['source'];
+            $url = (string) $endpoint['url'];
+            $request = $this->request_with_retry($url, 20, 'https://duckduckgo.com/');
+            $response = $request['response'] ?? null;
+            $http_code = (int) ($request['http_code'] ?? 0);
+            $body = (string) ($request['body'] ?? '');
+            $content_type = (string) ($request['content_type'] ?? '');
+
+            $attempts[] = [
+                'source' => $source,
+                'url' => $url,
+                'http_code' => $http_code,
+                'error' => is_wp_error($response) ? sanitize_text_field($response->get_error_message()) : '',
+            ];
+
+            $last = [
+                'source' => $source,
+                'url' => $url,
+                'response' => $response,
+                'http_code' => $http_code,
+                'body' => $body,
+                'content_type' => $content_type,
+                'attempts' => $attempts,
+            ];
+
+            if (is_wp_error($response)) {
+                continue;
+            }
+
+            if ($http_code >= 200 && $http_code < 300 && $body !== '') {
+                break;
+            }
+        }
+
+        return $last;
+    }
+
+    /**
+     * @return array{response:mixed,http_code:int,body:string,content_type:string}
+     */
+    private function request_with_retry(string $url, int $timeout, string $referer = ''): array
+    {
+        $last_response = null;
+        $last_http_code = 0;
+        $last_body = '';
+        $last_content_type = '';
+
+        foreach (self::USER_AGENTS as $index => $user_agent) {
+            $response = wp_remote_get($url, [
+                'timeout' => $timeout,
+                'redirection' => 5,
+                'headers' => $this->build_headers($user_agent, $referer),
+            ]);
+
+            if (is_wp_error($response)) {
+                $last_response = $response;
+                continue;
+            }
+
+            $http_code = (int) wp_remote_retrieve_response_code($response);
+            $body = (string) wp_remote_retrieve_body($response);
+            $content_type = strtolower((string) wp_remote_retrieve_header($response, 'content-type'));
+
+            $last_response = $response;
+            $last_http_code = $http_code;
+            $last_body = $body;
+            $last_content_type = $content_type;
+
+            // Retry once on obvious anti-bot responses.
+            if (($http_code === 403 || $http_code === 429) && $index === 0) {
+                continue;
+            }
+
+            break;
+        }
+
+        return [
+            'response' => $last_response,
+            'http_code' => $last_http_code,
+            'body' => $last_body,
+            'content_type' => $last_content_type,
+        ];
+    }
+
+    /**
+     * @return array<string,string>
+     */
+    private function build_headers(string $user_agent, string $referer = ''): array
+    {
+        $headers = [
+            'User-Agent' => $user_agent,
+            'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language' => 'sv-SE,sv;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Cache-Control' => 'no-cache',
+            'Pragma' => 'no-cache',
+        ];
+
+        if ($referer !== '') {
+            $headers['Referer'] = $referer;
+        }
+
+        return $headers;
     }
 
     /**
