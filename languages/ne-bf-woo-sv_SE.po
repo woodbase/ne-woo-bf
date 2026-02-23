@@ -1,499 +1,414 @@
-# Copyright (C) 2026 Nordic Equilibro
-<<<<<<< HEAD
-# This file is distributed under the same license as the Nordic Equilibro – Beauty Fort WooCommerce Integration plugin.
-msgid ""
-msgstr ""
-"Project-Id-Version: Nordic Equilibro – Beauty Fort WooCommerce Integration 0.0.4\n"
-=======
-# This file is distributed under the same license as the NE BeautyFort Woo plugin.
-msgid ""
-msgstr ""
-"Project-Id-Version: NE BeautyFort Woo 1.0.0\n"
->>>>>>> main
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/ne-bf-woo\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-<<<<<<< HEAD
-"POT-Creation-Date: 2026-02-14T17:01:32+00:00\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.12.0\n"
-"X-Domain: nordic-equilibro-beautyfort\n"
-
-#. Plugin Name of the plugin
-#: nordic-equilibro-beautyfort.php
-msgid "Nordic Equilibro – Beauty Fort WooCommerce Integration"
-msgstr ""
-
-#. Description of the plugin
-#: nordic-equilibro-beautyfort.php
-msgid "Internal integration to sync products from Beauty Fort to WooCommerce."
-msgstr ""
-
-#. Author of the plugin
-#: nordic-equilibro-beautyfort.php
-msgid "Nordic Equilibro"
-msgstr ""
-
-#: includes/product-import.php:7
-msgid "NEBF: Starting product import from BeautyFort API"
-msgstr ""
-
-#: includes/product-import.php:13
-msgid "NEBF: API returned WP_Error"
-msgstr ""
-
-#: includes/product-import.php:18
-msgid "NEBF: No rows returned from API"
-msgstr ""
-
-#: includes/product-import.php:19
-msgid "Inga produkter inlästa!"
-msgstr ""
-
-#: includes/product-import.php:85
-#, php-format
-msgid "NEBF: Cached products in DB: %d"
-msgstr ""
-
-#: includes/product-import.php:86
-#, php-format
-msgid "NEBF: Skipped products: %d"
-msgstr ""
-
-#: includes/product-import.php:87
-#, php-format
-msgid "NEBF: Total rows from API: %d"
-=======
-"POT-Creation-Date: 2026-02-23T06:11:29+00:00\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.12.0\n"
-"X-Domain: nebf-mvc\n"
-
 #. Plugin Name of the plugin
 #: ne-bf-woo-mvc.php
 msgid "NE BeautyFort Woo"
-msgstr ""
+msgstr "NE BeautyFort Woo"
 
 #. Description of the plugin
 #: ne-bf-woo-mvc.php
 msgid "BeautyFort WooCommerce integration."
-msgstr ""
+msgstr "BeautyFort-integration för WooCommerce."
 
 #. Author of the plugin
 #: ne-bf-woo-mvc.php
 msgid "Nordic Equilibro"
-msgstr ""
+msgstr "Nordic Equilibro"
 
 #: admin/views/dashboard.php:6
 msgid "Never"
-msgstr ""
+msgstr "Aldrig"
 
 #: admin/views/dashboard.php:36
 msgid "Total Products"
-msgstr ""
+msgstr "Totalt antal produkter"
 
 #: admin/views/dashboard.php:44
 msgid "Synced to WooCommerce"
-msgstr ""
+msgstr "Synkroniserade till WooCommerce"
 
 #: admin/views/dashboard.php:52
 msgid "Not Synced"
-msgstr ""
+msgstr "Ej synkroniserade"
 
 #: admin/views/dashboard.php:60
 msgid "Last Sync"
-msgstr ""
+msgstr "Senaste synkronisering"
 
 #: admin/views/dashboard.php:79
 msgid "Search online prices in background after import"
-msgstr ""
+msgstr "Sök onlinepriser i bakgrunden efter import"
 
 #: admin/views/dashboard.php:87
 msgid "Loading products..."
-msgstr ""
+msgstr "Laddar produkter..."
 
 #: admin/views/dashboard.php:88
 msgid "Load Products from BeautyFort"
-msgstr ""
+msgstr "Hämta produkter från BeautyFort"
 
 #: admin/views/dashboard.php:97
 msgid "Manage Products"
-msgstr ""
+msgstr "Hantera produkter"
 
 #: admin/views/online-lookup.php:13
 #: includes/Controllers/AdminPageRouter.php:70
 msgid "Online Lookup"
-msgstr ""
+msgstr "Onlineuppslag"
 
 #: admin/views/online-lookup.php:15
 msgid "Set a custom product name that will be used as search input during online price lookup."
-msgstr ""
+msgstr "Ange ett anpassat produktnamn som används som sökterm vid onlineprissökning."
 
 #: admin/views/online-lookup.php:18
 msgid "Current lookup payload fields: search name, brand, SKU, barcode."
-msgstr ""
+msgstr "Nuvarande uppslagsfält: söknamn, varumärke, SKU, streckkod."
 
 #: admin/views/online-lookup.php:21
 msgid "Default provider: DuckDuckGo HTML search. For best results, set a precise search-name override (brand + product + size)."
-msgstr ""
+msgstr "Standardleverantör: DuckDuckGo HTML-sökning. För bästa resultat, ange ett exakt söknamns-override (varumärke + produkt + storlek)."
 
 #: admin/views/online-lookup.php:32
 #: admin/views/online-lookup.php:78
 msgid "Product"
-msgstr ""
+msgstr "Produkt"
 
 #: admin/views/online-lookup.php:36
 msgid "Select a product"
-msgstr ""
+msgstr "Välj en produkt"
 
 #: admin/views/online-lookup.php:51
 #: admin/views/online-lookup.php:79
 msgid "Search Name Override"
-msgstr ""
+msgstr "Överskrid söknamn"
 
 #: admin/views/online-lookup.php:54
 msgid "Example: Dior Sauvage Eau de Parfum 100ml"
-msgstr ""
+msgstr "Exempel: Dior Sauvage Eau de Parfum 100ml"
 
 #: admin/views/online-lookup.php:56
 msgid "Leave empty and save to remove override for selected product."
-msgstr ""
+msgstr "Lämna tomt och spara för att ta bort override för vald produkt."
 
 #: admin/views/online-lookup.php:64
 msgid "Save Override"
-msgstr ""
+msgstr "Spara override"
 
 #: admin/views/online-lookup.php:70
 msgid "Saved Overrides"
-msgstr ""
+msgstr "Sparade overrides"
 
 #: admin/views/online-lookup.php:72
 msgid "No overrides saved yet."
-msgstr ""
+msgstr "Inga overrides sparade ännu."
 
 #: admin/views/online-lookup.php:77
 msgid "BF ID"
-msgstr ""
+msgstr "BF-ID"
 
 #: admin/views/online-lookup.php:80
 msgid "Actions"
-msgstr ""
+msgstr "Åtgärder"
 
 #: admin/views/online-lookup.php:98
 msgid "Queue Lookup"
-msgstr ""
+msgstr "Köa uppslag"
 
 #: admin/views/online-lookup.php:104
 msgid "Delete"
-msgstr ""
+msgstr "Ta bort"
 
 #: admin/views/partials/page-header-tabs.php:8
 #: includes/Controllers/AdminMenuController.php:22
 #: includes/Controllers/AdminPageRouter.php:50
 msgid "Nordic Equilibro - BeautyFort integration"
-msgstr ""
+msgstr "Nordic Equilibro - BeautyFort-integration"
 
 #: admin/views/partials/page-header-tabs.php:13
 #: includes/Controllers/AdminPageRouter.php:55
 msgid "Dashboard"
-msgstr ""
+msgstr "Översikt"
 
 #: admin/views/partials/page-header-tabs.php:14
 #: includes/Controllers/AdminPageRouter.php:60
 msgid "Products"
-msgstr ""
+msgstr "Produkter"
 
 #: admin/views/partials/page-header-tabs.php:15
 #: includes/Controllers/AdminPageRouter.php:65
 msgid "Settings"
-msgstr ""
+msgstr "Inställningar"
 
 #: admin/views/products.php:73
-#, php-format
-msgid "Online price lookup is running in background. %d product remains in queue."
 msgid_plural "Online price lookup is running in background. %d products remain in queue."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Onlineprissökning körs i bakgrunden. %d produkt återstår i kön."
+msgstr[1] "Onlineprissökning körs i bakgrunden. %d produkter återstår i kön."
 
 #: admin/views/products.php:88
 msgid "Online price lookup is complete. You can now see found prices under Extra information."
-msgstr ""
+msgstr "Onlineprissökningen är klar. Du kan nu se hittade priser under Extra information."
 
 #: admin/views/products.php:90
 #, php-format
 msgid "Last update: %s"
-msgstr ""
+msgstr "Senaste uppdatering: %s"
 
 #: admin/views/products.php:265
 msgid "Online price"
-msgstr ""
+msgstr "Onlinepris"
 
 #: admin/views/products.php:284
 msgid "Online lookup status"
-msgstr ""
+msgstr "Status för onlineuppslag"
 
 #: admin/views/products.php:295
 msgid "Found price"
-msgstr ""
+msgstr "Hittat pris"
 
 #: admin/views/products.php:297
 msgid "No result"
-msgstr ""
+msgstr "Inget resultat"
 
 #: admin/views/products.php:310
 msgid "Online source"
-msgstr ""
+msgstr "Onlinekälla"
 
 #: admin/views/products.php:323
 msgid "Open result page"
-msgstr ""
+msgstr "Öppna resultatsida"
 
 #: admin/views/products.php:329
 msgid "Online lookup query"
-msgstr ""
+msgstr "Onlineuppslagsfråga"
 
 #: admin/views/products.php:333
 msgid "Online lookup search URL"
-msgstr ""
+msgstr "Sök-URL för onlineuppslag"
 
 #: admin/views/products.php:346
 msgid "Online lookup debug"
-msgstr ""
+msgstr "Felsökning onlineuppslag"
 
 #: admin/views/settings.php:13
 msgid "Plugin Settings"
-msgstr ""
+msgstr "Tilläggsinställningar"
 
 #: admin/views/settings.php:15
 msgid "Configure your credentials and product name preferences for the Nordic Equilibro - BeautyFort integration."
-msgstr ""
+msgstr "Konfigurera dina inloggningsuppgifter och produktnamnsinställningar för Nordic Equilibro - BeautyFort-integrationen."
 
 #: admin/views/settings.php:26
 msgid "Username"
-msgstr ""
+msgstr "Användarnamn"
 
 #: admin/views/settings.php:31
 msgid "Your BeautyFort username."
-msgstr ""
+msgstr "Ditt BeautyFort-användarnamn."
 
 #: admin/views/settings.php:37
 msgid "API Key"
-msgstr ""
+msgstr "API-nyckel"
 
 #: admin/views/settings.php:42
 msgid "Your BeautyFort API key."
-msgstr ""
+msgstr "Din BeautyFort API-nyckel."
 
 #: admin/views/settings.php:47
 msgid "Separate Brand from Product Name"
-msgstr ""
+msgstr "Separera varumärke från produktnamn"
 
 #: admin/views/settings.php:52
 msgid "Enable to store brand separately and not prepend it to product names."
-msgstr ""
+msgstr "Aktivera för att lagra varumärket separat och inte lägga det före produktnamnet."
 
 #: admin/views/settings.php:59
 msgid "Currency"
-msgstr ""
+msgstr "Valuta"
 
 #: admin/views/settings.php:70
 msgid "Select the currency used by your BeautyFort account. Default is SEK."
-msgstr ""
+msgstr "Välj den valuta som används i ditt BeautyFort-konto. Standard är SEK."
 
 #: admin/views/settings.php:76
 msgid "Profit Margin Type"
-msgstr ""
+msgstr "Typ av påslag"
 
 #: admin/views/settings.php:81
 msgid "Percent (%)"
-msgstr ""
+msgstr "Procent (%)"
 
 #: admin/views/settings.php:84
 msgid "Fixed Amount"
-msgstr ""
+msgstr "Fast belopp"
 
 #: admin/views/settings.php:87
 msgid "Choose how profit is added on top of cost price."
-msgstr ""
+msgstr "Välj hur vinstpåslag läggs ovanpå inköpspriset."
 
 #: admin/views/settings.php:93
 msgid "Profit Margin Value"
-msgstr ""
+msgstr "Påslagsvärde"
 
 #: admin/views/settings.php:98
 #, php-format
 msgid "Example: 25 means +25%% in Percent mode, or +25 %s in Fixed Amount mode."
-msgstr ""
+msgstr "Exempel: 25 betyder +25%% i procentläge, eller +25 %s i fast-beloppsläge."
 
 #: admin/views/settings.php:106
 msgid "Save Changes"
-msgstr ""
+msgstr "Spara ändringar"
 
 #: includes/Controllers/AdminMenuController.php:23
 msgid "Nordic Equilibro - BeautyFort"
-msgstr ""
+msgstr "Nordic Equilibro - BeautyFort"
 
 #: includes/Controllers/DashboardController.php:36
 #, php-format
 msgid "(Debug stage: %s)"
-msgstr ""
+msgstr "(Felsökningssteg: %s)"
 
 #: includes/Controllers/DashboardController.php:38
 msgid "Raw API response saved in option: nebf_last_api_raw_response"
-msgstr ""
+msgstr "Rå API-respons sparad i inställning: nebf_last_api_raw_response"
 
 #: includes/Controllers/DashboardController.php:55
 msgid "API debug: "
-msgstr ""
+msgstr "API-felsökning: "
 
 #: includes/Controllers/DashboardController.php:86
-#, php-format
-msgid "%d product loaded from BeautyFort."
 msgid_plural "%d products loaded from BeautyFort."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d produkt hämtad från BeautyFort."
+msgstr[1] "%d produkter hämtade från BeautyFort."
 
 #: includes/Controllers/DashboardController.php:105
-#, php-format
-msgid "%d product queued for online price lookup in background."
 msgid_plural "%d products queued for online price lookup in background."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d produkt köad för onlineprissökning i bakgrunden."
+msgstr[1] "%d produkter köade för onlineprissökning i bakgrunden."
 
 #: includes/Controllers/DashboardController.php:117
 msgid "Products were imported and online lookup queue is already up to date."
-msgstr ""
+msgstr "Produkter importerades och kön för onlineuppslag är redan uppdaterad."
 
 #: includes/Controllers/DashboardController.php:123
 msgid "Products were imported, but online price lookup could not be queued."
-msgstr ""
+msgstr "Produkter importerades, men onlineprissökning kunde inte köas."
 
 #: includes/Controllers/DashboardController.php:130
 msgid "No products were loaded. Check API credentials in Settings and try again."
-msgstr ""
+msgstr "Inga produkter hämtades. Kontrollera API-uppgifter i Inställningar och försök igen."
 
 #: includes/Controllers/DashboardController.php:199
 msgid "Stock file parsed, but no products were found."
-msgstr ""
+msgstr "Lagerfilen tolkades, men inga produkter hittades."
 
 #: includes/Controllers/OnlineLookupController.php:72
 msgid "Select a product first."
-msgstr ""
+msgstr "Välj en produkt först."
 
 #: includes/Controllers/OnlineLookupController.php:84
 msgid "Search-name override removed."
-msgstr ""
+msgstr "Överskridning av söknamn borttagen."
 
 #: includes/Controllers/OnlineLookupController.php:90
 msgid "Search-name override saved."
-msgstr ""
+msgstr "Överskridning av söknamn sparad."
 
 #: includes/Controllers/OnlineLookupController.php:97
 msgid "Missing BF ID for delete."
-msgstr ""
+msgstr "BF-ID saknas för borttagning."
 
 #: includes/Controllers/OnlineLookupController.php:108
 msgid "Override deleted."
-msgstr ""
+msgstr "Override borttagen."
 
 #: includes/Controllers/OnlineLookupController.php:115
 msgid "Missing BF ID to queue."
-msgstr ""
+msgstr "BF-ID saknas för kö."
 
 #: includes/Controllers/OnlineLookupController.php:122
 msgid "Product queued for online lookup."
-msgstr ""
+msgstr "Produkt köad för onlineuppslag."
 
 #: includes/Controllers/OnlineLookupController.php:124
 msgid "Product is already queued or invalid."
-msgstr ""
+msgstr "Produkten är redan köad eller ogiltig."
 
 #: includes/Controllers/ProductsController.php:50
 msgid "Select at least one product to sync."
-msgstr ""
+msgstr "Välj minst en produkt att synkronisera."
 
 #: includes/Controllers/ProductsController.php:59
-#, php-format
-msgid "%d product synced to WooCommerce."
 msgid_plural "%d products synced to WooCommerce."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d produkt synkroniserad till WooCommerce."
+msgstr[1] "%d produkter synkroniserade till WooCommerce."
 
 #: includes/Controllers/ProductsController.php:74
-#, php-format
-msgid "%d product could not be synced."
 msgid_plural "%d products could not be synced."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d produkt kunde inte synkroniseras."
+msgstr[1] "%d produkter kunde inte synkroniseras."
 
 #: includes/Controllers/SettingsController.php:56
 msgid "Settings saved successfully."
-msgstr ""
+msgstr "Inställningar sparades."
 
 #: includes/Services/BeautyFortApiService.php:33
 msgid "Missing API credentials. Please check Settings."
-msgstr ""
+msgstr "API-uppgifter saknas. Kontrollera Inställningar."
 
 #: includes/Services/BeautyFortApiService.php:129
 msgid "Could not parse SOAP XML response."
-msgstr ""
+msgstr "Kunde inte tolka SOAP XML-svaret."
 
 #: includes/Services/BeautyFortApiService.php:140
 msgid "Could not locate SOAP namespaces in response."
-msgstr ""
+msgstr "Kunde inte hitta SOAP-namnrymder i svaret."
 
 #: includes/Services/BeautyFortApiService.php:152
 msgid "Could not find GetStockFileResponse in SOAP response."
-msgstr ""
+msgstr "Kunde inte hitta GetStockFileResponse i SOAP-svaret."
 
 #: includes/Services/BeautyFortApiService.php:160
 msgid "SOAP response did not contain file payload."
-msgstr ""
+msgstr "SOAP-svaret innehöll ingen filpayload."
 
 #: includes/Services/BeautyFortApiService.php:168
 msgid "Could not decode Base64 XML from BeautyFort."
-msgstr ""
+msgstr "Kunde inte avkoda Base64 XML från BeautyFort."
 
 #: includes/Services/BeautyFortApiService.php:178
 msgid "Could not parse stock XML payload."
-msgstr ""
+msgstr "Kunde inte tolka lager-XML-payload."
 
 #: includes/Services/BeautyFortApiService.php:267
 msgid "Legacy response payload was empty."
-msgstr ""
+msgstr "Legacy-svaret saknade innehåll."
 
 #: includes/Services/BeautyFortApiService.php:273
 msgid "Legacy payload normalization failed."
-msgstr ""
+msgstr "Normalisering av legacy-payload misslyckades."
 
 #: includes/Services/BeautyFortApiService.php:286
 msgid "Could not decode legacy base64 payload."
-msgstr ""
+msgstr "Kunde inte avkoda legacy base64-payload."
 
 #: includes/Services/BeautyFortApiService.php:301
 msgid "Could not parse decoded legacy XML payload."
-msgstr ""
+msgstr "Kunde inte tolka avkodad legacy XML-payload."
 
 #: includes/Services/BeautyFortApiService.php:316
 msgid "Could not parse decoded legacy JSON payload."
-msgstr ""
+msgstr "Kunde inte tolka avkodad legacy JSON-payload."
 
 #: includes/Services/BeautyFortApiService.php:353
 msgid "Could not convert legacy JSON payload to XML."
-msgstr ""
+msgstr "Kunde inte konvertera legacy JSON-payload till XML."
 
 #: includes/Services/ProductSyncService.php:55
 msgid "WooCommerce is not active."
-msgstr ""
+msgstr "WooCommerce är inte aktivt."
 
 #: includes/Services/ProductSyncService.php:70
 msgid "Missing SKU or product name."
-msgstr ""
+msgstr "SKU eller produktnamn saknas."
 
 #: includes/Services/ProductSyncService.php:97
 msgid "Failed to save WooCommerce product."
->>>>>>> main
-msgstr ""
+msgstr "Kunde inte spara WooCommerce-produkt."
