@@ -71,6 +71,7 @@ class ProductRepository
             }
 
             $is_synced = !empty($product['synced']);
+            $has_lookup_run = (int) ($product['web_price_lookup_updated_at'] ?? 0) > 0;
 
             // Status filter
             if (!empty($filters['status'])) {
@@ -78,6 +79,16 @@ class ProductRepository
                     return false;
                 }
                 if ($filters['status'] === 'not_imported' && $is_synced) {
+                    return false;
+                }
+            }
+
+            // Online lookup run filter
+            if (!empty($filters['lookup_run'])) {
+                if ($filters['lookup_run'] === 'ran' && !$has_lookup_run) {
+                    return false;
+                }
+                if ($filters['lookup_run'] === 'not_ran' && $has_lookup_run) {
                     return false;
                 }
             }

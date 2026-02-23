@@ -93,6 +93,7 @@ class ProductsController extends AbstractAdminController
             'brand'      => $_GET['brand'] ?? '',
             'collection' => $_GET['collection'] ?? '',
             'status'     => $_GET['status'] ?? '',
+            'lookup_run' => $_GET['lookup_run'] ?? '',
         ];
 
         // Query paginated products for the view.

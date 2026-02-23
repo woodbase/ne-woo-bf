@@ -7,7 +7,7 @@ $items       = is_array($products['items'] ?? null) ? $products['items'] : [];
 $page        = $page ?? 1;
 $total_pages = $total_pages ?? 1;
 $search_term = $search_term ?? '';
-$filters     = $filters ?? ['brand' => '', 'collection' => '', 'status' => ''];
+$filters     = $filters ?? ['brand' => '', 'collection' => '', 'status' => '', 'lookup_run' => ''];
 $lookup_status = is_array($lookup_status ?? null) ? $lookup_status : [];
 
 // --- Prepare dropdown options ---
@@ -120,6 +120,12 @@ $lookup_last_run_text = $lookup_last_run_at > 0 ? wp_date($lookup_datetime_forma
         <option value=""><?php _e('All status', 'nebf'); ?></option>
         <option value="imported" <?= selected($filters['status'], 'imported', false); ?>><?php _e('Imported', 'nebf'); ?></option>
         <option value="not_imported" <?= selected($filters['status'], 'not_imported', false); ?>><?php _e('Not imported', 'nebf'); ?></option>
+    </select>
+
+    <select name="lookup_run">
+        <option value=""><?php _e('All lookup states', 'nebf-mvc'); ?></option>
+        <option value="ran" <?= selected($filters['lookup_run'], 'ran', false); ?>><?php _e('Online lookup run', 'nebf-mvc'); ?></option>
+        <option value="not_ran" <?= selected($filters['lookup_run'], 'not_ran', false); ?>><?php _e('Online lookup not run', 'nebf-mvc'); ?></option>
     </select>
 
     <button class="button button-primary"><?php _e('Update', 'nebf'); ?></button>
@@ -426,7 +432,7 @@ $lookup_last_run_text = $lookup_last_run_at > 0 ? wp_date($lookup_datetime_forma
 
         if (resetSearchButton) {
             resetSearchButton.addEventListener('click', function() {
-                form.querySelectorAll('input[name="s"], select[name="brand"], select[name="collection"], select[name="status"]').forEach(function(field) {
+                form.querySelectorAll('input[name="s"], select[name="brand"], select[name="collection"], select[name="status"], select[name="lookup_run"]').forEach(function(field) {
                     field.value = '';
                 });
                 form.submit();
