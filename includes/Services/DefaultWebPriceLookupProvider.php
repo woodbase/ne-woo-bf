@@ -14,6 +14,7 @@ class DefaultWebPriceLookupProvider
     private const MAX_CRAWL_RESULTS = 5;
     private const SEARCH_ENDPOINT_HTML = 'https://html.duckduckgo.com/html/';
     private const SEARCH_ENDPOINT_LITE = 'https://lite.duckduckgo.com/lite/';
+    private const SEARCH_ENDPOINT_BING = 'https://www.bing.com/search';
     /** @var array<int,string> */
     private const USER_AGENTS = [
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -91,6 +92,20 @@ class DefaultWebPriceLookupProvider
         }
 
         $result_urls = $this->extract_result_urls($html);
+        if (empty($result_urls)) {
+            return [
+                'source' => $search_source,
+                'url' => $search_url,
+                'debug' => [
+                    'stage' => 'search_results_empty',
+                    'http_code' => $http_code,
+                    'search_source' => $search_source,
+                    'search_attempts' => $search_attempts,
+                    'body_head' => sanitize_text_field(substr(wp_strip_all_tags($html), 0, 200)),
+                ],
+            ];
+        }
+
         $crawl_stats = [
             'attempted' => 0,
             'http_403' => 0,
@@ -278,6 +293,14 @@ class DefaultWebPriceLookupProvider
                     'kl' => 'se-sv',
                 ], self::SEARCH_ENDPOINT_LITE),
             ],
+            [
+                'source' => 'bing',
+                'url' => (string) add_query_arg([
+                    'q' => $query,
+                    'setlang' => 'sv-SE',
+                    'cc' => 'SE',
+                ], self::SEARCH_ENDPOINT_BING),
+            ],
         ];
 
         $attempts = [];
@@ -294,7 +317,8 @@ class DefaultWebPriceLookupProvider
         foreach ($endpoints as $endpoint) {
             $source = (string) $endpoint['source'];
             $url = (string) $endpoint['url'];
-            $request = $this->request_with_retry($url, 20, 'https://duckduckgo.com/');
+            $referer = str_starts_with($source, 'duckduckgo') ? 'https://duckduckgo.com/' : 'https://www.bing.com/';
+            $request = $this->request_with_retry($url, 20, $referer);
             $response = $request['response'] ?? null;
             $http_code = (int) ($request['http_code'] ?? 0);
             $body = (string) ($request['body'] ?? '');
@@ -321,7 +345,12 @@ class DefaultWebPriceLookupProvider
                 continue;
             }
 
-            if ($http_code >= 200 && $http_code < 300 && $body !== '') {
+            if (
+                $http_code >= 200 &&
+                $http_code < 300 &&
+                $body !== '' &&
+                $this->is_search_results_page($body)
+            ) {
                 break;
             }
         }
@@ -394,6 +423,28 @@ class DefaultWebPriceLookupProvider
         }
 
         return $headers;
+    }
+
+    private function is_search_results_page(string $html): bool
+    {
+        // Detect that this is a result page and not a generic DDG landing/challenge page.
+        $needles = [
+            'result__a',
+            'result-link',
+            '/l/?uddg=',
+            'uddg=',
+            'web-result',
+            'b_algo',
+            'b_results',
+        ];
+
+        foreach ($needles as $needle) {
+            if (stripos($html, $needle) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -601,11 +652,28 @@ class DefaultWebPriceLookupProvider
                 return wp_http_validate_url($decoded) ? $decoded : '';
             }
         }
+        if (str_contains($host, 'bing.com') && str_starts_with($path, '/ck/')) {
+            parse_str((string) ($parts['query'] ?? ''), $query);
+            $encoded = (string) ($query['u'] ?? '');
+            if ($encoded !== '') {
+                $decoded = urldecode($encoded);
+                if (str_starts_with($decoded, 'a1')) {
+                    $decoded = substr($decoded, 2);
+                    $candidate = base64_decode($decoded, true);
+                    if (is_string($candidate) && wp_http_validate_url($candidate)) {
+                        return $candidate;
+                    }
+                }
+                if (wp_http_validate_url($decoded)) {
+                    return $decoded;
+                }
+            }
+        }
 
         if (!in_array((string) ($parts['scheme'] ?? ''), ['http', 'https'], true)) {
             return '';
         }
-        if (str_contains($host, 'duckduckgo.com')) {
+        if (str_contains($host, 'duckduckgo.com') || str_contains($host, 'bing.com')) {
             return '';
         }
 
