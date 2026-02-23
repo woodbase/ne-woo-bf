@@ -11,7 +11,7 @@ function nebf_handle_settings_actions()
     if (!isset($_POST['nebf_action'])) return;
 
     // ==============================
-    // IMPORT PRODUCTS
+    // IMPORTERA PRODUKTER
     // ==============================
     if ($_POST['nebf_action'] === 'import_products') {
 
@@ -21,13 +21,14 @@ function nebf_handle_settings_actions()
 
         if (is_wp_error($result)) {
 
+            $message = $result->get_error_message();
+
             wp_redirect(add_query_arg([
                 'page'        => 'nordic-equilibro-beautyfort',
                 'nebf_notice' => 'error',
-                'message'     => urlencode($result->get_error_message())
+                'message'     => urlencode($message)
             ], admin_url('admin.php')));
             exit;
-
         } else {
 
             $last_fetch       = current_time('mysql');
@@ -36,10 +37,16 @@ function nebf_handle_settings_actions()
             update_option('nebf_last_fetch', $last_fetch);
             update_option('nebf_last_fetch_count', $last_fetch_count);
 
+            $message = sprintf(
+                /* translators: %d = antal importerade produkter */
+                __('%d produkter importerade som utkast.', 'ne-bf-woo'),
+                $last_fetch_count
+            );
+
             wp_redirect(add_query_arg([
                 'page'        => 'nordic-equilibro-beautyfort',
                 'nebf_notice' => 'success',
-                'imported'    => $last_fetch_count
+                'message'     => urlencode($message)
             ], admin_url('admin.php')));
             exit;
         }
@@ -56,7 +63,7 @@ function nebf_handle_settings_actions()
 
         $message = is_wp_error($result)
             ? $result->get_error_message()
-            : 'API-anslutning OK';
+            : __('API-anslutning OK', 'ne-bf-woo');
 
         wp_redirect(add_query_arg([
             'page'        => 'nordic-equilibro-beautyfort',

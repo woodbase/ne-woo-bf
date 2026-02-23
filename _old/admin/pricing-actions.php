@@ -6,7 +6,6 @@ if (!defined('ABSPATH')) exit;
  */
 function nebf_handle_pricing_actions()
 {
-
     if (!isset($_GET['page']) || $_GET['page'] !== 'nordic-equilibro-beautyfort') {
         return;
     }
@@ -25,13 +24,24 @@ function nebf_handle_pricing_actions()
             'rounding'      => sanitize_text_field($_POST['rounding']),
         ]);
 
-        add_settings_error('nebf_pricing', 'saved', 'Pricing settings saved.', 'updated');
+        add_settings_error(
+            'nebf_pricing',
+            'saved',
+            __('Prissättningsinställningarna sparades.', 'ne-bf-woo'),
+            'updated'
+        );
     }
 
     // RECALCULATE
     if (isset($_POST['nebf_recalculate_all'])) {
         NEBF_Pricing_Engine::recalculate_all_products();
-        add_settings_error('nebf_pricing', 'recalculated', 'All product prices recalculated.', 'updated');
+
+        add_settings_error(
+            'nebf_pricing',
+            'recalculated',
+            __('Alla produktpriser har beräknats på nytt.', 'ne-bf-woo'),
+            'updated'
+        );
     }
 }
 

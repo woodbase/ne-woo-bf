@@ -113,7 +113,6 @@ function nebf_save_inline_price()
         wp_send_json_success([
             'formatted_price' => function_exists('wc_price') ? wc_price($value) : $value
         ]);
-
     } elseif ($type === 'margin') {
         // Save overridden margin for the product
         update_option('nebf_margin_override_' . $bf_id, $value);
@@ -132,33 +131,27 @@ function nebf_save_inline_price()
 /**
  * Enqueue Material Icons for admin pages.
  */
-function nebf_enqueue_material_icons($hook) {
-
-    if (strpos($hook, 'nordic_equilibro_beautyfort') === false) {
-        return;
-    }
-
+function nebf_enqueue_material_icons()
+{
     wp_enqueue_style(
         'nebf-material-icons',
-        'https://fonts.googleapis.com/css2?family=Material+Icons',
+        'https://fonts.googleapis.com/css?family=Material+Icons',
         [],
         null
     );
 }
 add_action('admin_enqueue_scripts', 'nebf_enqueue_material_icons');
 
-function nebf_admin_icon_styles() {
-    ?>
-    <style>
-        .nebf-icon-spin {
-            animation: nebf-spin 1s linear infinite;
-        }
+/**
+ * Plugin Name: BeautyFort Plugin
+ * Text Domain: beautyfort
+ * Domain Path: /languages
+ */
 
-        @keyframes nebf-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-    <?php
-}
-add_action('admin_head', 'nebf_admin_icon_styles');
+add_action('plugins_loaded', function () {
+    load_plugin_textdomain(
+        'ne-bf-woo',
+        false,
+        dirname(plugin_basename(__FILE__)) . '/languages'
+    );
+});

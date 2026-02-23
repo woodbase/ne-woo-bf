@@ -4,19 +4,19 @@ if (!defined('ABSPATH')) exit;
 
 function nebf_import_products()
 {
-    error_log('NEBF: Starting product import from BeautyFort API');
+    error_log(__('NEBF: Starting product import from BeautyFort API', 'nordic-equilibro-beautyfort'));
 
-    // Fetch data from BeautyFort
+    // Hämta data från API
     $rows = nebf_api_request_stockfile();
 
     if (is_wp_error($rows)) {
-        error_log('NEBF: API returned WP_Error');
+        error_log(__('NEBF: API returned WP_Error', 'nordic-equilibro-beautyfort'));
         return $rows;
     }
 
     if (empty($rows)) {
-        error_log('NEBF: No rows returned from API');
-        return new WP_Error('nebf_empty', 'Inga produkter inlästa!');
+        error_log(__('NEBF: No rows returned from API', 'nordic-equilibro-beautyfort'));
+        return new WP_Error('nebf_empty', __('Inga produkter inlästa!', 'nordic-equilibro-beautyfort'));
     }
 
     $products = [];
@@ -41,9 +41,9 @@ function nebf_import_products()
             }
         }
 
-        $raw_name = $row['FullName'] ?? '';
-        $brand    = $row['Brand'] ?? '';
-        $clean_name = nebf_clean_product_name($raw_name, $brand);
+        $raw_name    = $row['FullName'] ?? '';
+        $brand       = $row['Brand'] ?? '';
+        $clean_name  = nebf_clean_product_name($raw_name, $brand);
 
         $products[$bf_id] = [
             'bf_id' => $bf_id,
@@ -51,28 +51,28 @@ function nebf_import_products()
             'stock_level' => $stock,
             'price' => isset($row['Price']) ? (float)$row['Price'] : 0,
 
-            // Product data
-            'barcode' => $row['Barcode'] ?? '',
-            'brand'   => $brand,
-            'category' => $row['Category'] ?? '',
+            // Produktdata
+            'barcode'    => $row['Barcode'] ?? '',
+            'brand'      => $brand,
+            'category'   => $row['Category'] ?? '',
             'collection' => $row['Collection'] ?? '',
             'description' => $row['Description'] ?? '',
-            'fullname' => $clean_name,
-            'rawname'  => $raw_name,
-            'gender'   => $row['Gender'] ?? '',
-            'size'     => $row['Size'] ?? '',
-            'type'     => $row['Type'] ?? '',
+            'fullname'   => $clean_name,
+            'rawname'    => $raw_name,
+            'gender'     => $row['Gender'] ?? '',
+            'size'       => $row['Size'] ?? '',
+            'type'       => $row['Type'] ?? '',
 
             // Media
             'high_res_image_url' => $row['HighResImageUrl'] ?? '',
-            'thumbnail_url'    => $row['ThumbnailImageUrl'] ?? '',
+            'thumbnail_url'      => $row['ThumbnailImageUrl'] ?? '',
             'image_last_updated' => $row['ImageLastUpdated'] ?? '',
 
-            // History
-            'last_purchased_date' => $row['LastPurchasedDate'] ?? '',
+            // Historik
+            'last_purchased_date'  => $row['LastPurchasedDate'] ?? '',
             'last_purchased_price' => $row['LastPurchasedPrice'] ?? '',
-            'your_rating'       => $row['YourRating'] ?? '',
-            'your_stock_code'   => $row['YourStockCode'] ?? '',
+            'your_rating'          => $row['YourRating'] ?? '',
+            'your_stock_code'      => $row['YourStockCode'] ?? '',
 
             // Always raw data
             'raw' => $row,
@@ -82,9 +82,9 @@ function nebf_import_products()
     // --- Always save in DB ---
     update_option('nebf_beautyfort_products', $products);
 
-    error_log('NEBF: Cached products in DB: ' . count($products));
-    error_log('NEBF: Skipped products: ' . $skipped);
-    error_log('NEBF: Total rows from API: ' . count($rows));
+    error_log(sprintf(__('NEBF: Cached products in DB: %d', 'nordic-equilibro-beautyfort'), count($products)));
+    error_log(sprintf(__('NEBF: Skipped products: %d', 'nordic-equilibro-beautyfort'), $skipped));
+    error_log(sprintf(__('NEBF: Total rows from API: %d', 'nordic-equilibro-beautyfort'), count($rows)));
 
     return [
         'cached'  => count($products),

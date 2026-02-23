@@ -2,89 +2,77 @@
 if (!defined('ABSPATH')) exit;
 
 /**
- * Helper functions for BeautyFort
+ * Hjälpfunktioner för BeautyFort
+ * Samlar alla funktioner som används i admin och produktimport.
  */
 
 /**
- * Status icon for product
+ * Hämtar cachelagrade produkter
  */
-function nebf_get_status_icon($status)
+function nebf_get_cached_products()
 {
-    switch ($status) {
-        case 'publish':
-            return '<span class="dashicons dashicons-yes-alt" style="color: #46b450;" title="Publicerad"></span>';
-        case 'draft':
-            return '<span class="dashicons dashicons-edit" style="color: #ffb900;" title="Utkast"></span>';
-        default:
-            return '<span class="dashicons dashicons-warning" style="color: #dc3232;" title="Okänd status"></span>';
-    }
+    $products = get_option('nebf_beautyfort_products', []);
+    return is_array($products) ? $products : [];
 }
 
 /**
- * Thumbnail for product
+ * Genererar sorteringslänk för tabellkolumner
  */
-function nebf_get_product_thumbnail($product, $size = 'thumbnail')
+function nebf_sort_link($column, $current_orderby, $current_order, $label)
 {
-    $image_id = $product->get_image_id();
+    $order = 'ASC';
+    $arrow = ' ⇅';
 
-    if ($image_id) {
-        return wp_get_attachment_image($image_id, $size, false, [
-            'style' => 'width:50px;height:auto;border-radius:4px;'
-        ]);
+    if ($current_orderby === $column) {
+        if ($current_order === 'ASC') {
+            $order = 'DESC';
+            $arrow = ' ▲';
+        } else {
+            $order = 'ASC';
+            $arrow = ' ▼';
+        }
     }
 
-    return '<span class="dashicons dashicons-format-image" style="font-size:32px;color:#ccc;"></span>';
+    $url = add_query_arg([
+        'orderby'    => $column,
+        'order'      => $order,
+        'paged'      => 1,
+        'per_page'   => $_GET['per_page'] ?? 100,
+        's'          => $_GET['s'] ?? '',
+        'brand'      => $_GET['brand'] ?? '',
+        'collection' => $_GET['collection'] ?? '',
+        'status'     => $_GET['status'] ?? '',
+    ]);
+
+    return '<a href="' . esc_url($url) . '">' . esc_html__($label, 'nebf') . $arrow . '</a>';
 }
 
 /**
- * Renders product details
+ * Formaterar ett fält (sträng eller array)
  */
-function nebf_render_product_details($product)
+function nebf_format_field($field)
 {
-?>
-    <div style="padding:16px; background:#f9f9f9; border-left:4px solid #2271b1;">
-        <h3><?php echo esc_html($product->get_name()); ?></h3>
+    if (empty($field)) return '—';
+    if (is_array($field)) {
+        return implode('<br>', array_map('esc_html', $field));
+    }
+    return esc_html($field);
+}
 
-        <p><strong>Status:</strong> <?php echo esc_html($product->get_status()); ?></p>
-        <p><strong>SKU:</strong> <?php echo esc_html($product->get_sku()); ?></p>
-        <p><strong>Beskrivning:</strong><br><?php echo wp_kses_post($product->get_description() ?: 'Ingen beskrivning'); ?></p>
-        <p><strong>Kort beskrivning:</strong><br><?php echo wp_kses_post($product->get_short_description() ?: '–'); ?></p>
-        <p><strong>Lager:</strong>
-            <?php
-            echo $product->get_manage_stock()
-                ? intval($product->get_stock_quantity())
-                : 'Ej lagerstyrd';
-            ?>
-        </p>
-        <p><strong>Pris:</strong> <?php echo wc_price($product->get_price()); ?></p>
+/**
+ * Rensar produktnamn från varumärke
+ */
+function nebf_clean_product_name($name, $brand)
+{
+    $strip = get_option('nebf_strip_brand_from_name', 1);
 
-        <p><strong>Attribut:</strong><br>
-            <?php
-            $attributes = $product->get_attributes();
-            if ($attributes) {
-                echo '<ul>';
-                foreach ($attributes as $attr) {
-                    echo '<li><strong>' .
-                        esc_html(wc_attribute_label($attr->get_name())) .
-                        ':</strong> ' .
-                        esc_html(implode(', ', $attr->get_options())) .
-                        '</li>';
-                }
-                echo '</ul>';
-            } else {
-                echo 'Inga attribut';
-            }
-            ?>
-        </p>
+    if (!$strip || !$brand || !$name) return $name;
 
-        <p>
-            <a href="<?php echo esc_url(get_edit_post_link($product->get_id())); ?>"
-                class="button button-secondary">
-                Öppna i WooCommerce
-            </a>
-        </p>
-    </div>
-<?php
+    $patterns = [
+        '/^' . preg_quote($brand, '/') . '\s*[-–]?\s*/i',
+    ];
+
+    return trim(preg_replace($patterns, '', $name));
 }
 
 /**
@@ -127,94 +115,82 @@ function nebf_get_wc_products($args = [])
 }
 
 /**
- * Cleans product name from brand
+ * Renderar produktdetaljer (HTML)
  */
-function nebf_clean_product_name($name, $brand)
+function nebf_render_product_details($product)
 {
-    $strip = get_option('nebf_strip_brand_from_name', 1);
+?>
+    <div style="padding:16px; background:#f9f9f9; border-left:4px solid #2271b1;">
+        <h3><?php echo esc_html($product->get_name()); ?></h3>
 
-    if (!$strip || !$brand || !$name) return $name;
+        <p><strong><?php esc_html_e('Status', 'nebf'); ?>:</strong> <?php echo esc_html($product->get_status()); ?></p>
+        <p><strong><?php esc_html_e('SKU', 'nebf'); ?>:</strong> <?php echo esc_html($product->get_sku()); ?></p>
+        <p><strong><?php esc_html_e('Beskrivning', 'nebf'); ?>:</strong><br><?php echo wp_kses_post($product->get_description() ?: __('Ingen beskrivning', 'nebf')); ?></p>
+        <p><strong><?php esc_html_e('Kort beskrivning', 'nebf'); ?>:</strong><br><?php echo wp_kses_post($product->get_short_description() ?: '–'); ?></p>
+        <p><strong><?php esc_html_e('Lager', 'nebf'); ?>:</strong>
+            <?php
+            echo $product->get_manage_stock()
+                ? intval($product->get_stock_quantity())
+                : __('Ej lagerstyrd', 'nebf');
+            ?>
+        </p>
+        <p><strong><?php esc_html_e('Pris', 'nebf'); ?>:</strong> <?php echo wc_price($product->get_price()); ?></p>
 
-    $patterns = [
-        '/^' . preg_quote($brand, '/') . '\s*[-–]?\s*/i',
-    ];
+        <p><strong><?php esc_html_e('Attribut', 'nebf'); ?>:</strong><br>
+            <?php
+            $attributes = $product->get_attributes();
+            if ($attributes) {
+                echo '<ul>';
+                foreach ($attributes as $attr) {
+                    echo '<li><strong>' .
+                        esc_html(wc_attribute_label($attr->get_name())) .
+                        ':</strong> ' .
+                        esc_html(implode(', ', $attr->get_options())) .
+                        '</li>';
+                }
+                echo '</ul>';
+            } else {
+                echo __('Inga attribut', 'nebf');
+            }
+            ?>
+        </p>
 
-    return trim(preg_replace($patterns, '', $name));
+        <p>
+            <a href="<?php echo esc_url(get_edit_post_link($product->get_id())); ?>" class="button button-secondary">
+                <?php esc_html_e('Öppna i WooCommerce', 'nebf'); ?>
+            </a>
+        </p>
+    </div>
+<?php
 }
 
 /**
- * Formats a field (string or array)
+ * Hämtar thumbnail för produkt
  */
-function nebf_format_field($field)
+function nebf_get_product_thumbnail($product, $size = 'thumbnail')
 {
-    if (empty($field)) return '—';
-    if (is_array($field)) {
-        return implode('<br>', array_map('esc_html', $field));
+    $image_id = $product->get_image_id();
+
+    if ($image_id) {
+        return wp_get_attachment_image($image_id, $size, false, [
+            'style' => 'width:50px;height:auto;border-radius:4px;'
+        ]);
     }
-    return esc_html($field);
+
+    return '<span class="dashicons dashicons-format-image" style="font-size:32px;color:#ccc;"></span>';
 }
 
 /**
- * Generates sorting link for table columns
+ * Statusikon för produkt
  */
-function nebf_sort_link($column, $current_orderby, $current_order, $label)
+function nebf_get_status_icon($status)
 {
-    $order = 'ASC';
-    $arrow = ' ⇅';
-
-    if ($current_orderby === $column) {
-        if ($current_order === 'ASC') {
-            $order = 'DESC';
-            $arrow = ' ▲';
-        } else {
-            $order = 'ASC';
-            $arrow = ' ▼';
-        }
+    switch ($status) {
+        case 'publish':
+            return '<span class="dashicons dashicons-yes-alt" style="color: #46b450;" title="' . esc_attr__('Publicerad', 'nebf') . '"></span>';
+        case 'draft':
+            return '<span class="dashicons dashicons-edit" style="color: #ffb900;" title="' . esc_attr__('Utkast', 'nebf') . '"></span>';
+        default:
+            return '<span class="dashicons dashicons-warning" style="color: #dc3232;" title="' . esc_attr__('Okänd status', 'nebf') . '"></span>';
     }
-
-    $url = add_query_arg([
-        'orderby'    => $column,
-        'order'      => $order,
-        'paged'      => 1,
-        'per_page'   => $_GET['per_page'] ?? 100,
-        's'          => $_GET['s'] ?? '',
-        'brand'      => $_GET['brand'] ?? '',
-        'collection' => $_GET['collection'] ?? '',
-        'status'     => $_GET['status'] ?? '',
-    ]);
-
-    return '<a href="' . esc_url($url) . '">' . esc_html($label) . $arrow . '</a>';
-}
-
-function nebf_get_cached_products() {
-    $products = get_option('nebf_beautyfort_products', []);
-    return is_array($products) ? $products : [];
-}
-
-/**
- * Render Material Icon
- */
-function nebf_icon($name, $class = '', $size = 20) {
-
-    $style = "font-size: {$size}px; vertical-align: middle;";
-
-    return sprintf(
-        '<span class="material-icons %s" style="%s">%s</span>',
-        esc_attr($class),
-        esc_attr($style),
-        esc_html($name)
-    );
-}
-
-function nebf_sync_status_icon($is_imported) {
-
-    if ($is_imported) {
-        return '<span title="Synkad till WooCommerce">'
-            . nebf_icon('check_circle', 'nebf-icon-success')
-            . '</span>';
-    }
-
-    return '<span title="Inte synkad till WooCommerce">'
-        . nebf_icon('radio_button_unchecked', 'nebf-icon-muted')
-        . '</span>';
 }
