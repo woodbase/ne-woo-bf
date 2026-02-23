@@ -1,46 +1,46 @@
-# 🌟 Nordic Equilibro – BeautyFort WooCommerce Integration
+# ne-woo-bf
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge)](https://github.com/)
-[![WordPress](https://img.shields.io/badge/WordPress-6.0+-green?style=for-the-badge)](https://wordpress.org/)
-[![WooCommerce](https://img.shields.io/badge/WooCommerce-7.0+-orange?style=for-the-badge)](https://woocommerce.com/)
-[![License](https://img.shields.io/badge/license-MIT-lightgrey?style=for-the-badge)](LICENSE)
+WordPress-plugin för första release av **BeautyFort ↔ WooCommerce**-integration.
 
----
+## Första release (v1.0.0)
 
-## 🚀 Overview
+Den här releasen fokuserar på en stabil grund för produktimport och synk mellan BeautyFort och WooCommerce.
 
-The **Nordic Equilibro – BeautyFort Integration** plugin brings **BeautyFort products directly into WooCommerce**, making store management **fast, simple, and automated**.  
+### Innehåll i releasen
+- Import av produkter från BeautyFort till WooCommerce.
+- Synk av lagerstatus.
+- Grundläggande adminvyer för:
+  - Dashboard
+  - Produkter
+  - Inställningar
+- Språkstöd via språkfiler (`sv_SE`, `en_US`, `de_DE`, `es_ES`).
 
-> "Keep your WooCommerce store stylish and fully stocked! 🚀"
+## Krav
+- WordPress 6+
+- WooCommerce 7+
+- PHP 8.0+
 
----
+## Installation
+1. Lägg plugin-mappen i:
+   `wp-content/plugins/ne-woo-bf`
+2. Aktivera pluginet via **Tillägg** i WordPress admin.
+3. Gå till pluginets inställningar och fyll i API-uppgifter.
+4. Kör första produktimporten.
 
-## 🌟 Features at a Glance
+## Användning
+1. Öppna pluginets adminsektion.
+2. Verifiera anslutning mot BeautyFort.
+3. Starta import/synk.
+4. Kontrollera importerade produkter i WooCommerce.
 
-| Feature | Description | Emoji |
-|---------|-------------|-------|
-| Product Import | Fetch all products from BeautyFort and save them to WooCommerce | 📥 |
-| Stock Sync | Automatically update inventory levels | 🔄 |
-| Product Fields | Barcode, Brand, BreakBulkReference, Category, Collection, Description, Price, Status | 🏷️ |
-| Admin Panel | Quick import button with sortable/filterable table | ⚡ |
-| Caching | Store products in transient for faster admin view | 🗄️ |
+## Projektstruktur (översikt)
+- `includes/Core/` – bootstrap/autoload/plugin-kärna
+- `includes/Controllers/` – adminflöden och routing
+- `includes/Services/` – API/synk/notiser
+- `includes/Models/` – datalager/repositories
+- `admin/views/` – adminvyer
+- `assets/` – statiska resurser
+- `languages/` – översättningar
 
----
-
-## 🛠️ Installation
-
-```bash
-# Step 1: Upload plugin folder
-/wp-content/plugins/nordic-equilibro-beautyfort
-
-# Step 2: Activate plugin in WordPress admin
-Plugins > Installed Plugins > Activate
-
-# Step 3: Configure
-WooCommerce > BeautyFort
-- API Key
-- Customer Number
-- Optional: Collections/Categories
-
-# Step 4: Import products
-Click "Fetch Products from BeautyFort"
+## Licens
+MIT (se `LICENSE`).
