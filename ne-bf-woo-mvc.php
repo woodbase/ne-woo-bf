@@ -3,6 +3,10 @@
  * Plugin Name: NE BeautyFort Woo
  * Description: BeautyFort WooCommerce integration.
  * Version: 1.0.0
+ * Requires at least: 6.0
+ * Requires PHP: 8.0
+ * Requires Plugins: woocommerce
+ * WC requires at least: 7.0
  * Author: Nordic Equilibro
  * Text Domain: nebf-mvc
  * Domain Path: /languages

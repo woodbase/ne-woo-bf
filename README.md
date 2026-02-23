@@ -1,46 +1,61 @@
-# ne-woo-bf
+# ✨ NE BeautyFort Woo
 
-WordPress-plugin för första release av **BeautyFort ↔ WooCommerce**-integration.
+[![Version](https://img.shields.io/badge/version-1.0.0-2563eb?style=for-the-badge)](#)
+[![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=for-the-badge&logo=wordpress&logoColor=white)](https://wordpress.org)
+[![WooCommerce](https://img.shields.io/badge/WooCommerce-7.0%2B-7f54b3?style=for-the-badge&logo=woocommerce&logoColor=white)](https://woocommerce.com)
+[![PHP](https://img.shields.io/badge/PHP-8.0%2B-777bb4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net)
+[![License](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)](LICENSE)
 
-## Första release (v1.0.0)
+A WordPress plugin for the first public release of the **BeautyFort ↔ WooCommerce** integration.
 
-Den här releasen fokuserar på en stabil grund för produktimport och synk mellan BeautyFort och WooCommerce.
+---
 
-### Innehåll i releasen
-- Import av produkter från BeautyFort till WooCommerce.
-- Synk av lagerstatus.
-- Grundläggande adminvyer för:
+## 🚀 First Release (v1.0.0)
+
+This release provides a stable baseline for product import and synchronization between BeautyFort and WooCommerce.
+
+### ✅ Included in this release
+- Product import from BeautyFort into WooCommerce
+- Stock synchronization
+- Core admin pages:
   - Dashboard
-  - Produkter
-  - Inställningar
-- Språkstöd via språkfiler (`sv_SE`, `en_US`, `de_DE`, `es_ES`).
+  - Products
+  - Settings
+- Localization files:
+  - `sv_SE`
+  - `en_US`
+  - `de_DE`
+  - `es_ES`
 
-## Krav
-- WordPress 6+
-- WooCommerce 7+
-- PHP 8.0+
+## 📋 Requirements
 
-## Installation
-1. Lägg plugin-mappen i:
+| Platform | Minimum version |
+|---|---|
+| WordPress | `6.0+` |
+| WooCommerce | `7.0+` |
+| PHP | `8.0+` |
+
+## 🛠 Installation
+1. Place the plugin folder in:
    `wp-content/plugins/ne-woo-bf`
-2. Aktivera pluginet via **Tillägg** i WordPress admin.
-3. Gå till pluginets inställningar och fyll i API-uppgifter.
-4. Kör första produktimporten.
+2. Activate the plugin from **Plugins** in the WordPress admin
+3. Open plugin settings and add API credentials
+4. Run the first product import
 
-## Användning
-1. Öppna pluginets adminsektion.
-2. Verifiera anslutning mot BeautyFort.
-3. Starta import/synk.
-4. Kontrollera importerade produkter i WooCommerce.
+## 🔄 Usage
+1. Open the plugin admin section
+2. Verify the BeautyFort connection
+3. Start import/sync
+4. Verify imported products in WooCommerce
 
-## Projektstruktur (översikt)
-- `includes/Core/` – bootstrap/autoload/plugin-kärna
-- `includes/Controllers/` – adminflöden och routing
-- `includes/Services/` – API/synk/notiser
-- `includes/Models/` – datalager/repositories
-- `admin/views/` – adminvyer
-- `assets/` – statiska resurser
-- `languages/` – översättningar
+## 🧩 Project structure (overview)
+- `includes/Core/` – bootstrap, autoloader, plugin core
+- `includes/Controllers/` – admin flow and routing
+- `includes/Services/` – API, sync, notices
+- `includes/Models/` – repositories/data access
+- `admin/views/` – admin views
+- `assets/` – static assets
+- `languages/` – translation files
 
-## Licens
-MIT (se `LICENSE`).
+## 📄 License
+MIT (see `LICENSE`).
