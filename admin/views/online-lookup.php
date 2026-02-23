@@ -17,6 +17,9 @@ $overrides = is_array($overrides ?? null) ? $overrides : [];
     <p>
         <?php esc_html_e('Current lookup payload fields: search name, brand, SKU, barcode.', 'nebf-mvc'); ?>
     </p>
+    <p>
+        <?php esc_html_e('Default provider: DuckDuckGo HTML search. For best results, set a precise search-name override (brand + product + size).', 'nebf-mvc'); ?>
+    </p>
 
     <form method="post">
         <?php wp_nonce_field('nebf_save_lookup_override'); ?>

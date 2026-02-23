@@ -75,7 +75,7 @@ if ($last_sync_raw !== '' && $last_sync_raw !== null) {
         <input type="hidden" name="nebf_sync_all" value="1">
         <p class="nebf-dashboard-option">
             <label for="nebf_lookup_online_prices">
-                <input type="checkbox" id="nebf_lookup_online_prices" name="nebf_lookup_online_prices" value="1">
+                <input type="checkbox" id="nebf_lookup_online_prices" name="nebf_lookup_online_prices" value="1" checked>
                 <?php esc_html_e('Search online prices in background after import', 'nebf-mvc'); ?>
             </label>
         </p>

@@ -84,6 +84,13 @@ class WebPriceLookupService
             if (!empty($result['url'])) {
                 $product['web_price_url'] = esc_url_raw((string) $result['url']);
             }
+            if (!empty($result['debug'])) {
+                if (is_array($result['debug'])) {
+                    $product['web_price_lookup_debug'] = wp_json_encode($result['debug']);
+                } else {
+                    $product['web_price_lookup_debug'] = sanitize_text_field((string) $result['debug']);
+                }
+            }
         }
 
         $product['web_price_lookup_status'] = $status;

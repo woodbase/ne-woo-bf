@@ -114,8 +114,8 @@ class DashboardController extends AbstractAdminController
                             );
                         } else {
                             $this->notices->add(
-                                __('No products were queued for online price lookup.', 'nebf-mvc'),
-                                'warning'
+                                __('Products were imported and online lookup queue is already up to date.', 'nebf-mvc'),
+                                'info'
                             );
                         }
                     } catch (\Throwable $e) {

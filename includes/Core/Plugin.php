@@ -3,6 +3,7 @@
 namespace NEBF\Core;
 
 use NEBF\Controllers\AdminMenuController;
+use NEBF\Services\DefaultWebPriceLookupProvider;
 use NEBF\Services\WebPriceLookupQueueService;
 
 if (!defined('ABSPATH')) exit;
@@ -24,6 +25,10 @@ class Plugin {
         // Register background queue hooks.
         $web_price_lookup_queue = new WebPriceLookupQueueService();
         $web_price_lookup_queue->register_hooks();
+
+        // Register a default web lookup provider for installations without custom integrations.
+        $default_web_lookup_provider = new DefaultWebPriceLookupProvider();
+        $default_web_lookup_provider->register_hooks();
 
         // Enqueue admin assets (CSS/JS) only when needed.
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
