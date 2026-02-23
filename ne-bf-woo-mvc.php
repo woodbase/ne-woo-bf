@@ -36,6 +36,7 @@ add_action('plugins_loaded', 'nebf_mvc_load_textdomain');
  * Load autoloader
  */
 require_once NEBF_MVC_PATH . 'includes/Core/Autoloader.php';
+require_once NEBF_MVC_PATH . 'includes/Support/helpers.php';
 
 /**
  * Bootstrap plugin

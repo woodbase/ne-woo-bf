@@ -62,14 +62,12 @@ class DashboardController extends AbstractAdminController
             $loaded_count = count($api_products);
             update_option('nebf_last_sync', time());
 
-            // Respect "Separate Brand" setting.
-            $separate = (bool) get_option('nebf_separate_brand', 0);
             foreach ($api_products as &$product) {
                 $brand = (string) ($product['brand'] ?? '');
                 $name = (string) ($product['fullname'] ?? '');
 
-                if ($separate && $brand !== '' && stripos($name, $brand) === 0) {
-                    $name = trim(substr($name, strlen($brand)));
+                if (function_exists('nebf_clean_product_name')) {
+                    $name = (string) nebf_clean_product_name($name, $brand);
                 }
 
                 $product['brand'] = $brand;
