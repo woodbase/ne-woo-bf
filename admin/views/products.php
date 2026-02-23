@@ -330,6 +330,19 @@ $lookup_last_run_text = $lookup_last_run_at > 0 ? wp_date($lookup_datetime_forma
                                     <td><?= esc_html($nebf_display($product['web_price_lookup_query'] ?? null, '—')); ?></td>
                                 </tr>
                                 <tr>
+                                    <th><?php _e('Online lookup search URL', 'nebf-mvc'); ?></th>
+                                    <td>
+                                        <?php
+                                        $lookup_search_url = esc_url($nebf_scalar($product['web_price_lookup_search_url'] ?? ''));
+                                        if ($lookup_search_url !== '') {
+                                            echo '<a href="' . esc_url($lookup_search_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html($lookup_search_url) . '</a>';
+                                        } else {
+                                            echo '—';
+                                        }
+                                        ?>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <th><?php _e('Online lookup debug', 'nebf-mvc'); ?></th>
                                     <td><?= esc_html($nebf_display($product['web_price_lookup_debug'] ?? null, '—')); ?></td>
                                 </tr>

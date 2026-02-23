@@ -53,6 +53,7 @@ class WebPriceLookupService
         $sku = (string) ($product['sku'] ?? '');
         $barcode = (string) ($product['barcode'] ?? '');
         $search_query = trim(implode(' ', array_filter([$lookup_name, $brand, $barcode])));
+        $search_url = $this->build_search_url($search_query);
 
         $payload = [
             'bf_id' => $bf_id,
@@ -63,6 +64,7 @@ class WebPriceLookupService
             'barcode' => $barcode,
             'search_name_override' => $name_override,
             'search_query' => $search_query,
+            'search_url' => $search_url,
         ];
 
         // Integrators can provide a real online lookup implementation via this filter.
@@ -96,10 +98,27 @@ class WebPriceLookupService
         $product['web_price_lookup_status'] = $status;
         $product['web_price_lookup_updated_at'] = time();
         $product['web_price_lookup_query'] = $search_query;
+        if ($search_url !== '') {
+            $product['web_price_lookup_search_url'] = $search_url;
+        }
 
         $products[$bf_id] = $product;
 
         return true;
+    }
+
+    private function build_search_url(string $search_query): string
+    {
+        $query = sanitize_text_field($search_query);
+        if ($query === '') {
+            return '';
+        }
+
+        return (string) add_query_arg([
+            'q' => $query,
+            'kl' => 'se-sv',
+            'kp' => '-2',
+        ], 'https://html.duckduckgo.com/html/');
     }
 
     private function get_name_override(string $bf_id): string
