@@ -23,58 +23,14 @@ class BeautyFortApiService
         $secret   = get_option('nebf_api_key', get_option('nebf_api_secret', ''));
         $testmode = get_option('nebf_api_testmode', '0') === '1' ? 'true' : 'false';
 
-        $steps = [];
-        $steps[] = [
-            'key' => 'init',
-            'label' => 'Init request',
-            'status' => 'ok',
-            'details' => 'Starting CreateOrder request flow.',
-        ];
-
         if (!$username || !$secret) {
-            $steps[] = [
-                'key' => 'credentials',
-                'label' => 'Validate credentials',
-                'status' => 'error',
-                'details' => 'Missing API credentials in plugin settings.',
-            ];
-            $this->store_create_order_trace('', '', null, [
-                'success' => false,
-                'error' => 'Missing API credentials.',
-                'steps' => $steps,
-            ]);
             return new \WP_Error('nebf_missing_credentials', __('Missing API credentials. Please check Settings.', 'nebf-mvc'));
         }
 
-        $steps[] = [
-            'key' => 'credentials',
-            'label' => 'Validate credentials',
-            'status' => 'ok',
-            'details' => 'Credentials found in settings.',
-        ];
-
         $validTypes = ['Wholesale', 'Direct Dispatch'];
         if (!in_array($type, $validTypes, true)) {
-            $steps[] = [
-                'key' => 'validate_type',
-                'label' => 'Validate order type',
-                'status' => 'error',
-                'details' => 'Invalid order type was provided.',
-            ];
-            $this->store_create_order_trace('', '', null, [
-                'success' => false,
-                'error' => 'Invalid order type.',
-                'steps' => $steps,
-            ]);
             return new \WP_Error('nebf_invalid_order_type', __('Invalid order type for CreateOrder request.', 'nebf-mvc'));
         }
-
-        $steps[] = [
-            'key' => 'validate_type',
-            'label' => 'Validate order type',
-            'status' => 'ok',
-            'details' => 'Order type is valid: ' . $type,
-        ];
 
         $nonce   = uniqid();
         $created = date('c');
@@ -98,13 +54,6 @@ class BeautyFortApiService
 
         $xml .= '</bf:CreateOrderRequest></soap:Body></soap:Envelope>';
 
-        $steps[] = [
-            'key' => 'build_request',
-            'label' => 'Build SOAP request',
-            'status' => 'ok',
-            'details' => 'SOAP XML generated for CreateOrder.',
-        ];
-
         $response = wp_remote_post('https://www.beautyfort.com/api/soap', [
             'headers' => [
                 'Content-Type' => 'text/xml; charset=UTF-8',
@@ -115,86 +64,10 @@ class BeautyFortApiService
         ]);
 
         if (is_wp_error($response)) {
-            $steps[] = [
-                'key' => 'send_request',
-                'label' => 'Send request',
-                'status' => 'error',
-                'details' => $response->get_error_message(),
-            ];
-            $this->store_create_order_trace($xml, '', null, [
-                'success' => false,
-                'error' => $response->get_error_message(),
-                'steps' => $steps,
-            ]);
             return $response;
         }
 
-        $steps[] = [
-            'key' => 'send_request',
-            'label' => 'Send request',
-            'status' => 'ok',
-            'details' => 'Request sent to BeautyFort endpoint.',
-        ];
-
-        $body = (string) wp_remote_retrieve_body($response);
-        $httpCode = (int) wp_remote_retrieve_response_code($response);
-        $steps[] = [
-            'key' => 'receive_response',
-            'label' => 'Receive response',
-            'status' => 'ok',
-            'details' => 'HTTP status: ' . $httpCode,
-        ];
-
-        $parsed = $this->parse_create_order_response($body);
-
-        if (is_wp_error($parsed)) {
-            $steps[] = [
-                'key' => 'parse_response',
-                'label' => 'Parse SOAP response',
-                'status' => 'error',
-                'details' => $parsed->get_error_message(),
-            ];
-
-            $this->store_create_order_trace($xml, $body, $httpCode, [
-                'success' => false,
-                'error' => $parsed->get_error_message(),
-                'steps' => $steps,
-            ]);
-
-            return $parsed;
-        }
-
-        $steps[] = [
-            'key' => 'parse_response',
-            'label' => 'Parse SOAP response',
-            'status' => 'ok',
-            'details' => 'SOAP response parsed into normalized model.',
-        ];
-
-        $steps[] = [
-            'key' => 'result',
-            'label' => 'CreateOrder result',
-            'status' => !empty($parsed['success']) ? 'ok' : 'warning',
-            'details' => !empty($parsed['success'])
-                ? 'Order created successfully.'
-                : 'Order not created. Check errors in response.',
-        ];
-
-        $parsed['steps'] = $steps;
-        $this->store_create_order_trace($xml, $body, $httpCode, $parsed);
-
-        return $parsed;
-    }
-
-    /**
-     * Retrieve last CreateOrder request/response trace from options.
-     *
-     * @return array<string, mixed>
-     */
-    public function get_last_create_order_trace(): array
-    {
-        $trace = get_option('nebf_last_create_order_trace', []);
-        return is_array($trace) ? $trace : [];
+        return $this->parse_create_order_response((string) wp_remote_retrieve_body($response));
     }
 
     /**
@@ -559,26 +432,6 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
         ];
 
         update_option('nebf_last_api_raw_response', $snapshot, false);
-    }
-
-
-    /**
-     * Persist request/response trace for CreateOrder in options.
-     *
-     * @param array<string, mixed> $parsed
-     */
-    private function store_create_order_trace(string $requestXml, string $responseBody, ?int $httpCode, array $parsed): void
-    {
-        $snapshot = [
-            'time' => gmdate('c'),
-            'endpoint' => 'https://www.beautyfort.com/api/soap',
-            'http_code' => $httpCode,
-            'request_xml' => substr($requestXml, 0, 12000),
-            'response_body' => substr($responseBody, 0, 12000),
-            'parsed' => $parsed,
-        ];
-
-        update_option('nebf_last_create_order_trace', $snapshot, false);
     }
 
     /**
