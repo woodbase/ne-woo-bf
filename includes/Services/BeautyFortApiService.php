@@ -302,14 +302,8 @@ class BeautyFortApiService
         $trace['step'] = 'soap_parse';
         libxml_use_internal_errors(true);
 
-
-$xml_debug = simplexml_load_string($body);
-$ns = $xml_debug->getNamespaces(true);
-
-$soap = $xml_debug->children($ns['SOAP-ENV']);
-
         $soapXml = simplexml_load_string($body);
-        if (!$soap) {
+        if (!$soapXml) {
             $trace['stage'] = 'invalid_soap_xml';
             $trace['libxml_errors'] = $this->collect_libxml_errors();
             $trace['body_head_hex'] = bin2hex(substr((string) $body, 0, 32));
@@ -318,30 +312,29 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
         }
 
         $trace['step'] = 'soap_namespaces';
-        $namespaces = $soapXml->getNamespaces(true);
-        $soapNs = $namespaces['SOAP-ENV'] ?? ($namespaces['soap'] ?? null);
-        $bfNs = $namespaces['ns1'] ?? ($namespaces['bf'] ?? null);
-
-        if (!$soapNs || !$bfNs) {
-            $trace['stage'] = 'missing_namespaces';
-            $this->store_debug_trace($trace);
-            return new \WP_Error('no_response', __('Could not locate SOAP namespaces in response.', 'nebf-mvc'));
-        }
+        $soapXml->registerXPathNamespace('SOAP-ENV', 'http://schemas.xmlsoap.org/soap/envelope/');
+        $soapXml->registerXPathNamespace('bf', 'http://www.beautyfort.com/api/');
 
         $trace['step'] = 'soap_response_node';
-        $soap = $soapXml->children($soapNs);
-        $soapBody = $soap->Body;
-        $bf = $soapBody->children($bfNs);
-        $stockResponse = $bf->GetStockFileResponse ?? null;
+        $soapBodies = $soapXml->xpath('//SOAP-ENV:Body');
+        if (empty($soapBodies)) {
+            $trace['stage'] = 'missing_soap_body';
+            $this->store_debug_trace($trace);
+            return new \WP_Error('no_response', __('Could not locate SOAP Body in response.', 'nebf-mvc'));
+        }
 
-        if (!$stockResponse) {
+        $soapBody = $soapBodies[0];
+        $stockResponses = $soapBody->xpath('.//bf:GetStockFileResponse');
+        if (empty($stockResponses)) {
             $trace['stage'] = 'missing_getstockfileresponse';
             $this->store_debug_trace($trace);
             return new \WP_Error('no_response', __('Could not find GetStockFileResponse in SOAP response.', 'nebf-mvc'));
         }
 
+        $stockResponse = $stockResponses[0];
+
         $trace['step'] = 'soap_file_decode';
-        $encodedFile = $this->extract_file_payload($stockResponse, (string) $bfNs);
+        $encodedFile = $this->extract_file_payload($stockResponse, 'http://www.beautyfort.com/api/');
         if ($encodedFile === '') {
             $trace['stage'] = 'missing_file_node';
             $this->store_debug_trace($trace);
@@ -376,11 +369,13 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
      */
     private function extract_file_payload(\SimpleXMLElement $stockResponse, string $bfNs): string
     {
+        // Try direct child first
         $direct = trim((string) ($stockResponse->File ?? ''));
         if ($direct !== '') {
             return $direct;
         }
 
+        // Try with namespace
         $nsChildren = $stockResponse->children($bfNs);
         if ($nsChildren instanceof \SimpleXMLElement) {
             $namespaced = trim((string) ($nsChildren->File ?? ''));
@@ -389,6 +384,7 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
             }
         }
 
+        // Try XPath with local-name
         $nodes = $stockResponse->xpath('.//*[local-name()="File"]');
         if (is_array($nodes) && !empty($nodes)) {
             $xpathValue = trim((string) $nodes[0]);
@@ -561,7 +557,6 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
         update_option('nebf_last_api_raw_response', $snapshot, false);
     }
 
-
     /**
      * Persist request/response trace for CreateOrder in options.
      *
@@ -581,64 +576,81 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
         update_option('nebf_last_create_order_trace', $snapshot, false);
     }
 
-    /**
-     * Parse SOAP CreateOrder response into a normalized model.
-     *
-     * @return array<string, mixed>|\WP_Error
-     */
-    private function parse_create_order_response(string $body)
-    {
-        libxml_use_internal_errors(true);
-        $soapXml = simplexml_load_string($body);
+/**
+ * Parse SOAP CreateOrder response into a normalized model.
+ *
+ * @return array<string, mixed>|\WP_Error
+ */
+private function parse_create_order_response(string $body)
+{
+    // Use DOMDocument instead of SimpleXML for better namespace handling
+    $dom = new \DOMDocument();
+    $dom->preserveWhiteSpace = false;
+    
+    if (!$dom->loadXML($body)) {
+        return new \WP_Error('nebf_invalid_soap_xml', __('Could not parse SOAP XML response.', 'nebf-mvc'));
+    }
 
-        if (!$soapXml) {
-            return new \WP_Error('nebf_invalid_soap_xml', __('Could not parse SOAP XML response.', 'nebf-mvc'));
-        }
+    $xpath = new \DOMXPath($dom);
+    
+    // Register namespaces
+    $xpath->registerNamespace('SOAP-ENV', 'http://schemas.xmlsoap.org/soap/envelope/');
+    $xpath->registerNamespace('ns1', 'http://www.beautyfort.com/api/');
 
-        $namespaces = $soapXml->getNamespaces(true);
-        $soapNs = $namespaces['soap'] ?? ($namespaces['SOAP-ENV'] ?? null);
-        $bfNs = $namespaces['bf'] ?? ($namespaces['ns1'] ?? null);
+    // Find the CreateOrderResponse element
+    $responses = $xpath->query('//SOAP-ENV:Body/ns1:CreateOrderResponse');
+    
+    if ($responses->length === 0) {
+        return new \WP_Error('nebf_missing_createorder_response', __('Could not find CreateOrderResponse in SOAP response.', 'nebf-mvc'));
+    }
 
-        if (!$soapNs || !$bfNs) {
-            return new \WP_Error('nebf_missing_namespaces', __('Could not locate SOAP namespaces in response.', 'nebf-mvc'));
-        }
+    $responseNode = $responses->item(0);
 
-        $soap = $soapXml->children($soapNs);
-        $soapBody = $soap->Body;
-        $bf = $soapBody->children($bfNs);
-        $createOrderResponse = $bf->CreateOrderResponse ?? null;
+    // Extract TestMode
+    $testModeNodes = $xpath->query('.//ns1:TestMode', $responseNode);
+    $testMode = ($testModeNodes->length > 0) && ($testModeNodes->item(0)->nodeValue === 'true');
 
-        if (!$createOrderResponse) {
-            return new \WP_Error('nebf_missing_createorder_response', __('Could not find CreateOrderResponse in SOAP response.', 'nebf-mvc'));
-        }
+    // Extract OrderReference
+    $orderRefNodes = $xpath->query('.//ns1:OrderReference', $responseNode);
+    $orderReference = ($orderRefNodes->length > 0) ? (int) $orderRefNodes->item(0)->nodeValue : 0;
 
-        $errors = [];
-        if (isset($createOrderResponse->Errors->Error)) {
-            foreach ($createOrderResponse->Errors->Error as $error) {
-                $errors[] = [
-                    'code' => (int) ($error->Code ?? 0),
-                    'description' => (string) ($error->Description ?? ''),
-                ];
-            }
-        }
+    // Extract YourOrderReference
+    $yourRefNodes = $xpath->query('.//ns1:YourOrderReference', $responseNode);
+    $yourRef = ($yourRefNodes->length > 0) ? $yourRefNodes->item(0)->nodeValue : null;
 
-        $warnings = [];
-        if (isset($createOrderResponse->Warnings->Warning)) {
-            foreach ($createOrderResponse->Warnings->Warning as $warning) {
-                $warnings[] = [
-                    'code' => (int) ($warning->Code ?? 0),
-                    'description' => (string) ($warning->Description ?? ''),
-                ];
-            }
-        }
-
-        return [
-            'test_mode' => ((string) ($createOrderResponse->TestMode ?? 'false')) === 'true',
-            'order_reference' => (int) ($createOrderResponse->OrderReference ?? 0),
-            'your_order_reference' => isset($createOrderResponse->YourOrderReference) ? (string) $createOrderResponse->YourOrderReference : null,
-            'errors' => $errors,
-            'warnings' => $warnings,
-            'success' => empty($errors) && (int) ($createOrderResponse->OrderReference ?? 0) > 0,
+    // Extract Errors
+    $errors = [];
+    $errorNodes = $xpath->query('.//ns1:Error', $responseNode);
+    foreach ($errorNodes as $errorNode) {
+        $codeNodes = $xpath->query('.//ns1:Code', $errorNode);
+        $descNodes = $xpath->query('.//ns1:Description', $errorNode);
+        
+        $errors[] = [
+            'code' => ($codeNodes->length > 0) ? (int) $codeNodes->item(0)->nodeValue : 0,
+            'description' => ($descNodes->length > 0) ? $descNodes->item(0)->nodeValue : '',
         ];
     }
+
+    // Extract Warnings
+    $warnings = [];
+    $warningNodes = $xpath->query('.//ns1:Warning', $responseNode);
+    foreach ($warningNodes as $warningNode) {
+        $codeNodes = $xpath->query('.//ns1:Code', $warningNode);
+        $descNodes = $xpath->query('.//ns1:Description', $warningNode);
+        
+        $warnings[] = [
+            'code' => ($codeNodes->length > 0) ? (int) $codeNodes->item(0)->nodeValue : 0,
+            'description' => ($descNodes->length > 0) ? $descNodes->item(0)->nodeValue : '',
+        ];
+    }
+
+    return [
+        'test_mode' => $testMode,
+        'order_reference' => $orderReference,
+        'your_order_reference' => $yourRef,
+        'errors' => $errors,
+        'warnings' => $warnings,
+        'success' => empty($errors) && $orderReference > 0,
+    ];
+}
 }
