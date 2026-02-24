@@ -14,7 +14,6 @@ class TestOrderController extends AbstractAdminController
     public function handle(): void
     {
         $result = null;
-        $trace = [];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_admin_referer('nebf_create_test_order')) {
             $type = isset($_POST['nebf_order_type']) ? sanitize_text_field((string) $_POST['nebf_order_type']) : '';
@@ -44,11 +43,8 @@ class TestOrderController extends AbstractAdminController
             }
         }
 
-        $trace = (new BeautyFortApiService())->get_last_create_order_trace();
-
         $this->render('test-order', [
             'result' => $result,
-            'trace' => $trace,
         ]);
     }
 }
