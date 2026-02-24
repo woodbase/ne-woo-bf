@@ -4,20 +4,12 @@ if (!defined('ABSPATH')) exit;
 
 /** @var array<string,mixed>|\WP_Error|null $result */
 $result = $result ?? null;
-/** @var array<string,mixed> $trace */
-$trace = is_array($trace ?? null) ? $trace : [];
-/** @var array<string,string>|null $feedback */
-$feedback = is_array($feedback ?? null) ? $feedback : null;
 ?>
 
 <div class="wrap nebf-settings">
     <p><?php esc_html_e('Create a test order directly against BeautyFort CreateOrder API.', 'nebf-mvc'); ?></p>
 
-    <?php if (!empty($feedback['message'])) : ?>
-        <div class="notice notice-<?php echo esc_attr((string) ($feedback['type'] ?? 'info')); ?>"><p><?php echo esc_html((string) $feedback['message']); ?></p></div>
-    <?php endif; ?>
-
-    <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=test-order')); ?>">
+    <form method="post">
         <?php wp_nonce_field('nebf_create_test_order'); ?>
 
         <table class="form-table">
@@ -48,12 +40,6 @@ $feedback = is_array($feedback ?? null) ? $feedback : null;
     </form>
 
     <?php if (is_array($result)) : ?>
-        <p>
-            <strong><?php esc_html_e('Result:', 'nebf-mvc'); ?></strong>
-            <?php echo !empty($result['success'])
-                ? esc_html__('Order created successfully in BeautyFort.', 'nebf-mvc')
-                : esc_html__('Order was not created. See Errors below.', 'nebf-mvc'); ?>
-        </p>
         <h2><?php esc_html_e('CreateOrder Response', 'nebf-mvc'); ?></h2>
         <table class="widefat striped" style="max-width:900px;">
             <tbody>
@@ -83,47 +69,5 @@ $feedback = is_array($feedback ?? null) ? $feedback : null;
                 </tr>
             </tbody>
         </table>
-    <?php elseif ($result instanceof \WP_Error) : ?>
-        <h2><?php esc_html_e('CreateOrder Error', 'nebf-mvc'); ?></h2>
-        <table class="widefat striped" style="max-width:900px;">
-            <tbody>
-                <tr>
-                    <th><?php esc_html_e('Error code', 'nebf-mvc'); ?></th>
-                    <td><?php echo esc_html($result->get_error_code()); ?></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e('Error message', 'nebf-mvc'); ?></th>
-                    <td><?php echo esc_html($result->get_error_message()); ?></td>
-                </tr>
-            </tbody>
-        </table>
     <?php endif; ?>
-    <?php if (!empty($trace)) : ?>
-        <h2><?php esc_html_e('Last API trace', 'nebf-mvc'); ?></h2>
-        <table class="widefat striped" style="max-width:1100px;">
-            <tbody>
-                <tr>
-                    <th><?php esc_html_e('Time', 'nebf-mvc'); ?></th>
-                    <td><?php echo esc_html((string) ($trace['time'] ?? '')); ?></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e('Endpoint', 'nebf-mvc'); ?></th>
-                    <td><?php echo esc_html((string) ($trace['endpoint'] ?? '')); ?></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e('HTTP status', 'nebf-mvc'); ?></th>
-                    <td><?php echo esc_html((string) ($trace['http_code'] ?? '')); ?></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e('Request XML (sent)', 'nebf-mvc'); ?></th>
-                    <td><pre style="margin:0; white-space:pre-wrap;"><?php echo esc_html((string) ($trace['request_xml'] ?? '')); ?></pre></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e('Response body (received)', 'nebf-mvc'); ?></th>
-                    <td><pre style="margin:0; white-space:pre-wrap;"><?php echo esc_html((string) ($trace['response_body'] ?? '')); ?></pre></td>
-                </tr>
-            </tbody>
-        </table>
-    <?php endif; ?>
-
 </div>

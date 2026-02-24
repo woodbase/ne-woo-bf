@@ -64,33 +64,10 @@ class BeautyFortApiService
         ]);
 
         if (is_wp_error($response)) {
-            $this->store_create_order_trace($xml, '', null, [
-                'success' => false,
-                'error' => $response->get_error_message(),
-            ]);
             return $response;
         }
 
-        $body = (string) wp_remote_retrieve_body($response);
-        $httpCode = (int) wp_remote_retrieve_response_code($response);
-        $parsed = $this->parse_create_order_response($body);
-
-        $this->store_create_order_trace($xml, $body, $httpCode, is_wp_error($parsed)
-            ? ['success' => false, 'error' => $parsed->get_error_message()]
-            : $parsed);
-
-        return $parsed;
-    }
-
-    /**
-     * Retrieve last CreateOrder request/response trace from options.
-     *
-     * @return array<string, mixed>
-     */
-    public function get_last_create_order_trace(): array
-    {
-        $trace = get_option('nebf_last_create_order_trace', []);
-        return is_array($trace) ? $trace : [];
+        return $this->parse_create_order_response((string) wp_remote_retrieve_body($response));
     }
 
     /**
@@ -455,26 +432,6 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
         ];
 
         update_option('nebf_last_api_raw_response', $snapshot, false);
-    }
-
-
-    /**
-     * Persist request/response trace for CreateOrder in options.
-     *
-     * @param array<string, mixed> $parsed
-     */
-    private function store_create_order_trace(string $requestXml, string $responseBody, ?int $httpCode, array $parsed): void
-    {
-        $snapshot = [
-            'time' => gmdate('c'),
-            'endpoint' => 'https://www.beautyfort.com/api/soap',
-            'http_code' => $httpCode,
-            'request_xml' => substr($requestXml, 0, 12000),
-            'response_body' => substr($responseBody, 0, 12000),
-            'parsed' => $parsed,
-        ];
-
-        update_option('nebf_last_create_order_trace', $snapshot, false);
     }
 
     /**
