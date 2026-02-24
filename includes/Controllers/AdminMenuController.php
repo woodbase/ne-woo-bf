@@ -25,11 +25,29 @@ class AdminMenuController {
                 'nebf-mvc',
                 [$this, 'render']
             );
+
+            add_submenu_page(
+                'woocommerce',
+                __('BeautyFort Test Order', 'nebf-mvc'),
+                __('BeautyFort Test Order', 'nebf-mvc'),
+                'manage_options',
+                'nebf-mvc-test-order',
+                [$this, 'render_test_order']
+            );
         }
     }
 
     public function render(): void
     {
         (new AdminPageRouter())->handle();
+    }
+
+    public function render_test_order(): void
+    {
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__('BeautyFort Test Order', 'nebf-mvc') . '</h1>';
+        echo '</div>';
+
+        (new TestOrderController())->handle();
     }
 }

@@ -10,6 +10,67 @@ if (!defined('ABSPATH')) exit;
 class BeautyFortApiService
 {
     /**
+     * Create an order in BeautyFort.
+     *
+     * @param string $type Supported values: Wholesale, Direct Dispatch.
+     * @param string $yourOrderReference Optional client side order reference.
+     *
+     * @return array<string, mixed>|\WP_Error
+     */
+    public function create_order(string $type, string $yourOrderReference = '')
+    {
+        $username = get_option('nebf_username', get_option('nebf_api_username', ''));
+        $secret   = get_option('nebf_api_key', get_option('nebf_api_secret', ''));
+        $testmode = get_option('nebf_api_testmode', '0') === '1' ? 'true' : 'false';
+
+        if (!$username || !$secret) {
+            return new \WP_Error('nebf_missing_credentials', __('Missing API credentials. Please check Settings.', 'nebf-mvc'));
+        }
+
+        $validTypes = ['Wholesale', 'Direct Dispatch'];
+        if (!in_array($type, $validTypes, true)) {
+            return new \WP_Error('nebf_invalid_order_type', __('Invalid order type for CreateOrder request.', 'nebf-mvc'));
+        }
+
+        $nonce   = uniqid();
+        $created = date('c');
+        $password = base64_encode(sha1($nonce . $created . $secret));
+
+        $xml = '<?xml version="1.0" encoding="utf-8"?>'
+            . '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bf="http://www.beautyfort.com/api/">'
+            . '<soap:Header><bf:AuthHeader>'
+            . '<bf:Username>' . esc_xml($username) . '</bf:Username>'
+            . '<bf:Nonce>' . esc_xml($nonce) . '</bf:Nonce>'
+            . '<bf:Created>' . esc_xml($created) . '</bf:Created>'
+            . '<bf:Password>' . esc_xml($password) . '</bf:Password>'
+            . '</bf:AuthHeader></soap:Header>'
+            . '<soap:Body><bf:CreateOrderRequest>'
+            . '<bf:TestMode>' . $testmode . '</bf:TestMode>'
+            . '<bf:Type>' . esc_xml($type) . '</bf:Type>';
+
+        if ($yourOrderReference !== '') {
+            $xml .= '<bf:YourOrderReference>' . esc_xml($yourOrderReference) . '</bf:YourOrderReference>';
+        }
+
+        $xml .= '</bf:CreateOrderRequest></soap:Body></soap:Envelope>';
+
+        $response = wp_remote_post('https://www.beautyfort.com/api/soap', [
+            'headers' => [
+                'Content-Type' => 'text/xml; charset=UTF-8',
+                'Accept'       => 'text/xml',
+            ],
+            'body'    => $xml,
+            'timeout' => 60,
+        ]);
+
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        return $this->parse_create_order_response((string) wp_remote_retrieve_body($response));
+    }
+
+    /**
      * Request stockfile from BeautyFort and return decoded stock XML.
      *
      * @return \SimpleXMLElement|\WP_Error
@@ -371,5 +432,66 @@ $soap = $xml_debug->children($ns['SOAP-ENV']);
         ];
 
         update_option('nebf_last_api_raw_response', $snapshot, false);
+    }
+
+    /**
+     * Parse SOAP CreateOrder response into a normalized model.
+     *
+     * @return array<string, mixed>|\WP_Error
+     */
+    private function parse_create_order_response(string $body)
+    {
+        libxml_use_internal_errors(true);
+        $soapXml = simplexml_load_string($body);
+
+        if (!$soapXml) {
+            return new \WP_Error('nebf_invalid_soap_xml', __('Could not parse SOAP XML response.', 'nebf-mvc'));
+        }
+
+        $namespaces = $soapXml->getNamespaces(true);
+        $soapNs = $namespaces['soap'] ?? ($namespaces['SOAP-ENV'] ?? null);
+        $bfNs = $namespaces['bf'] ?? ($namespaces['ns1'] ?? null);
+
+        if (!$soapNs || !$bfNs) {
+            return new \WP_Error('nebf_missing_namespaces', __('Could not locate SOAP namespaces in response.', 'nebf-mvc'));
+        }
+
+        $soap = $soapXml->children($soapNs);
+        $soapBody = $soap->Body;
+        $bf = $soapBody->children($bfNs);
+        $createOrderResponse = $bf->CreateOrderResponse ?? null;
+
+        if (!$createOrderResponse) {
+            return new \WP_Error('nebf_missing_createorder_response', __('Could not find CreateOrderResponse in SOAP response.', 'nebf-mvc'));
+        }
+
+        $errors = [];
+        if (isset($createOrderResponse->Errors->Error)) {
+            foreach ($createOrderResponse->Errors->Error as $error) {
+                $errors[] = [
+                    'code' => (int) ($error->Code ?? 0),
+                    'description' => (string) ($error->Description ?? ''),
+                ];
+            }
+        }
+
+        $warnings = [];
+        if (isset($createOrderResponse->Warnings->Warning)) {
+            foreach ($createOrderResponse->Warnings->Warning as $warning) {
+                $warnings[] = [
+                    'code' => (int) ($warning->Code ?? 0),
+                    'description' => (string) ($warning->Description ?? ''),
+                ];
+            }
+        }
+
+        return [
+            'test_mode' => ((string) ($createOrderResponse->TestMode ?? 'false')) === 'true',
+            'order_reference' => (int) ($createOrderResponse->OrderReference ?? 0),
+            'your_order_reference' => isset($createOrderResponse->YourOrderReference) ? (string) $createOrderResponse->YourOrderReference : null,
+            'errors' => $errors,
+            'warnings' => $warnings,
+            'success' => empty($errors) && (int) ($createOrderResponse->OrderReference ?? 0) > 0,
+        ];
     }
 }
