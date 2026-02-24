@@ -198,171 +198,180 @@ class BeautyFortApiService
     }
 
     /**
-     * Request stockfile from BeautyFort and return decoded stock XML.
-     *
-     * @return \SimpleXMLElement|\WP_Error
-     */
-    public function request_stockfile()
-    {
-        $username = get_option('nebf_username', get_option('nebf_api_username', ''));
-        $secret   = get_option('nebf_api_key', get_option('nebf_api_secret', ''));
-        $testmode = get_option('nebf_api_testmode', '0') === '1' ? 'true' : 'false';
+ * Request stockfile from BeautyFort and return decoded stock XML.
+ *
+ * @return \SimpleXMLElement|\WP_Error
+ */
+public function request_stockfile()
+{
+    $username = get_option('nebf_username', get_option('nebf_api_username', ''));
+    $secret   = get_option('nebf_api_key', get_option('nebf_api_secret', ''));
+    $testmode = get_option('nebf_api_testmode', '0') === '1' ? 'true' : 'false';
 
-        $trace = [
-            'stage' => 'init',
-            'time' => gmdate('c'),
-            'endpoint' => 'https://www.beautyfort.com/api/soap',
-            'test_mode' => $testmode,
-        ];
+    $trace = [
+        'stage' => 'init',
+        'time' => gmdate('c'),
+        'endpoint' => 'https://www.beautyfort.com/api/soap',
+        'test_mode' => $testmode,
+    ];
 
-        if (!$username || !$secret) {
-            $trace['stage'] = 'missing_credentials';
-            $this->store_debug_trace($trace);
-            return new \WP_Error('nebf_missing_credentials', __('Missing API credentials. Please check Settings.', 'nebf-mvc'));
-        }
-
-        $nonce   = uniqid();
-        $created = date('c');
-        $password = base64_encode(sha1($nonce . $created . $secret));
-
-        $xml = '<?xml version="1.0" encoding="utf-8"?>'
-            . '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bf="http://www.beautyfort.com/api/">'
-            . '<soap:Header><bf:AuthHeader>'
-            . '<bf:Username>' . esc_xml($username) . '</bf:Username>'
-            . '<bf:Nonce>' . esc_xml($nonce) . '</bf:Nonce>'
-            . '<bf:Created>' . esc_xml($created) . '</bf:Created>'
-            . '<bf:Password>' . esc_xml($password) . '</bf:Password>'
-            . '</bf:AuthHeader></soap:Header>'
-            . '<soap:Body><bf:GetStockFileRequest>'
-            . '<bf:TestMode>' . $testmode . '</bf:TestMode>'
-            . '<bf:StockFileFormat>XML</bf:StockFileFormat>'
-            . '<bf:StockFileFields>'
-            . '<bf:StockFileField>Barcode</bf:StockFileField>'
-            . '<bf:StockFileField>Brand</bf:StockFileField>'
-            . '<bf:StockFileField>BreakBulkReference</bf:StockFileField>'
-            . '<bf:StockFileField>Category</bf:StockFileField>'
-            . '<bf:StockFileField>Collection</bf:StockFileField>'
-            . '<bf:StockFileField>Description</bf:StockFileField>'
-            . '<bf:StockFileField>FullName</bf:StockFileField>'
-            . '<bf:StockFileField>Gender</bf:StockFileField>'
-            . '<bf:StockFileField>HighResImageUrl</bf:StockFileField>'
-            . '<bf:StockFileField>ImageLastUpdated</bf:StockFileField>'
-            . '<bf:StockFileField>LastPurchasedDate</bf:StockFileField>'
-            . '<bf:StockFileField>LastPurchasedPrice</bf:StockFileField>'
-            . '<bf:StockFileField>Price</bf:StockFileField>'
-            . '<bf:StockFileField>Quantity</bf:StockFileField>'
-            . '<bf:StockFileField>Size</bf:StockFileField>'
-            . '<bf:StockFileField>StockCode</bf:StockFileField>'
-            . '<bf:StockFileField>StockLevel</bf:StockFileField>'
-            . '<bf:StockFileField>ThumbnailImageUrl</bf:StockFileField>'
-            . '<bf:StockFileField>Type</bf:StockFileField>'
-            . '<bf:StockFileField>YourRating</bf:StockFileField>'
-            . '<bf:StockFileField>YourStockCode</bf:StockFileField>'
-            . '</bf:StockFileFields>'
-            . '<bf:SortBy>FullName</bf:SortBy>'
-            . '<bf:StockFileEncoding>UTF-8</bf:StockFileEncoding>'
-            . '</bf:GetStockFileRequest></soap:Body></soap:Envelope>';
-
-        // Send SOAP request to BeautyFort endpoint.
-        $response = wp_remote_post('https://www.beautyfort.com/api/soap', [
-            'headers' => [
-                'Content-Type' => 'text/xml; charset=UTF-8',
-                'Accept'       => 'text/xml',
-            ],
-            'body'    => $xml,
-            'timeout' => 60,
-        ]);
-
-        if (is_wp_error($response)) {
-            $trace['stage'] = 'http_error';
-            $trace['error'] = $response->get_error_message();
-            $this->store_debug_trace($trace);
-            return $response;
-        }
-
-        $trace['http_code'] = (int) wp_remote_retrieve_response_code($response);
-        $trace['response_headers'] = wp_remote_retrieve_headers($response);
-
-        $body = wp_remote_retrieve_body($response);
-        $trace['body_preview'] = substr((string) $body, 0, 600);
-        $this->store_raw_response_snapshot($trace, (string) $body);
-
-        // Legacy payload path: API can return trueXML/trueJSON + base64 data.
-        $trace['step'] = 'legacy_probe';
-        $legacyStockXml = $this->parse_legacy_base64_response((string) $body);
-        if (!is_wp_error($legacyStockXml)) {
-            $trace['stage'] = 'success_legacy_base64';
-            $trace['step'] = 'legacy_probe_success';
-            $this->store_debug_trace($trace);
-            return $legacyStockXml;
-        }
-        $trace['legacy_error_code'] = $legacyStockXml->get_error_code();
-        $trace['legacy_error_message'] = $legacyStockXml->get_error_message();
-
-        $trace['step'] = 'soap_parse';
-        libxml_use_internal_errors(true);
-
-        $soapXml = simplexml_load_string($body);
-        if (!$soapXml) {
-            $trace['stage'] = 'invalid_soap_xml';
-            $trace['libxml_errors'] = $this->collect_libxml_errors();
-            $trace['body_head_hex'] = bin2hex(substr((string) $body, 0, 32));
-            $this->store_debug_trace($trace);
-            return new \WP_Error('nebf_invalid_soap_xml', __('Could not parse SOAP XML response.', 'nebf-mvc'));
-        }
-
-        $trace['step'] = 'soap_namespaces';
-        $soapXml->registerXPathNamespace('SOAP-ENV', 'http://schemas.xmlsoap.org/soap/envelope/');
-        $soapXml->registerXPathNamespace('bf', 'http://www.beautyfort.com/api/');
-
-        $trace['step'] = 'soap_response_node';
-        $soapBodies = $soapXml->xpath('//SOAP-ENV:Body');
-        if (empty($soapBodies)) {
-            $trace['stage'] = 'missing_soap_body';
-            $this->store_debug_trace($trace);
-            return new \WP_Error('no_response', __('Could not locate SOAP Body in response.', 'nebf-mvc'));
-        }
-
-        $soapBody = $soapBodies[0];
-        $stockResponses = $soapBody->xpath('.//bf:GetStockFileResponse');
-        if (empty($stockResponses)) {
-            $trace['stage'] = 'missing_getstockfileresponse';
-            $this->store_debug_trace($trace);
-            return new \WP_Error('no_response', __('Could not find GetStockFileResponse in SOAP response.', 'nebf-mvc'));
-        }
-
-        $stockResponse = $stockResponses[0];
-
-        $trace['step'] = 'soap_file_decode';
-        $encodedFile = $this->extract_file_payload($stockResponse, 'http://www.beautyfort.com/api/');
-        if ($encodedFile === '') {
-            $trace['stage'] = 'missing_file_node';
-            $this->store_debug_trace($trace);
-            return new \WP_Error('no_file', __('SOAP response did not contain file payload.', 'nebf-mvc'));
-        }
-
-        $decodedXml = base64_decode($encodedFile, true);
-        if ($decodedXml === false || $decodedXml === '') {
-            $trace['stage'] = 'base64_decode_failed';
-            $trace['encoded_file_preview'] = substr($encodedFile, 0, 120);
-            $this->store_debug_trace($trace);
-            return new \WP_Error('nebf_xml_error', __('Could not decode Base64 XML from BeautyFort.', 'nebf-mvc'));
-        }
-
-        $trace['step'] = 'stock_xml_parse';
-        $stockXml = simplexml_load_string($decodedXml);
-        if (!$stockXml) {
-            $trace['stage'] = 'invalid_stock_xml';
-            $trace['decoded_xml_preview'] = substr((string) $decodedXml, 0, 600);
-            $trace['libxml_errors'] = $this->collect_libxml_errors();
-            $this->store_debug_trace($trace);
-            return new \WP_Error('xml_error', __('Could not parse stock XML payload.', 'nebf-mvc'));
-        }
-
-        $trace['stage'] = 'success';
+    if (!$username || !$secret) {
+        $trace['stage'] = 'missing_credentials';
         $this->store_debug_trace($trace);
-        return $stockXml;
+        return new \WP_Error('nebf_missing_credentials', __('Missing API credentials. Please check Settings.', 'nebf-mvc'));
     }
+
+    $nonce   = uniqid();
+    $created = date('c');
+    $password = base64_encode(sha1($nonce . $created . $secret));
+
+    $xml = '<?xml version="1.0" encoding="utf-8"?>'
+        . '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bf="http://www.beautyfort.com/api/">'
+        . '<soap:Header><bf:AuthHeader>'
+        . '<bf:Username>' . esc_xml($username) . '</bf:Username>'
+        . '<bf:Nonce>' . esc_xml($nonce) . '</bf:Nonce>'
+        . '<bf:Created>' . esc_xml($created) . '</bf:Created>'
+        . '<bf:Password>' . esc_xml($password) . '</bf:Password>'
+        . '</bf:AuthHeader></soap:Header>'
+        . '<soap:Body><bf:GetStockFileRequest>'
+        . '<bf:TestMode>' . $testmode . '</bf:TestMode>'
+        . '<bf:StockFileFormat>XML</bf:StockFileFormat>'
+        . '<bf:StockFileFields>'
+        . '<bf:StockFileField>Barcode</bf:StockFileField>'
+        . '<bf:StockFileField>Brand</bf:StockFileField>'
+        . '<bf:StockFileField>BreakBulkReference</bf:StockFileField>'
+        . '<bf:StockFileField>Category</bf:StockFileField>'
+        . '<bf:StockFileField>Collection</bf:StockFileField>'
+        . '<bf:StockFileField>Description</bf:StockFileField>'
+        . '<bf:StockFileField>FullName</bf:StockFileField>'
+        . '<bf:StockFileField>Gender</bf:StockFileField>'
+        . '<bf:StockFileField>HighResImageUrl</bf:StockFileField>'
+        . '<bf:StockFileField>ImageLastUpdated</bf:StockFileField>'
+        . '<bf:StockFileField>LastPurchasedDate</bf:StockFileField>'
+        . '<bf:StockFileField>LastPurchasedPrice</bf:StockFileField>'
+        . '<bf:StockFileField>Price</bf:StockFileField>'
+        . '<bf:StockFileField>Quantity</bf:StockFileField>'
+        . '<bf:StockFileField>Size</bf:StockFileField>'
+        . '<bf:StockFileField>StockCode</bf:StockFileField>'
+        . '<bf:StockFileField>StockLevel</bf:StockFileField>'
+        . '<bf:StockFileField>ThumbnailImageUrl</bf:StockFileField>'
+        . '<bf:StockFileField>Type</bf:StockFileField>'
+        . '<bf:StockFileField>YourRating</bf:StockFileField>'
+        . '<bf:StockFileField>YourStockCode</bf:StockFileField>'
+        . '</bf:StockFileFields>'
+        . '<bf:SortBy>FullName</bf:SortBy>'
+        . '<bf:StockFileEncoding>UTF-8</bf:StockFileEncoding>'
+        . '</bf:GetStockFileRequest></soap:Body></soap:Envelope>';
+
+    // Send SOAP request to BeautyFort endpoint.
+    $response = wp_remote_post('https://www.beautyfort.com/api/soap', [
+        'headers' => [
+            'Content-Type' => 'text/xml; charset=UTF-8',
+            'Accept'       => 'text/xml',
+        ],
+        'body'    => $xml,
+        'timeout' => 60,
+    ]);
+
+    if (is_wp_error($response)) {
+        $trace['stage'] = 'http_error';
+        $trace['error'] = $response->get_error_message();
+        $this->store_debug_trace($trace);
+        return $response;
+    }
+
+    $trace['http_code'] = (int) wp_remote_retrieve_response_code($response);
+    $trace['response_headers'] = wp_remote_retrieve_headers($response);
+
+    $body = wp_remote_retrieve_body($response);
+    $trace['body_preview'] = substr((string) $body, 0, 600);
+    $this->store_raw_response_snapshot($trace, (string) $body);
+
+    // Legacy payload path: API can return trueXML/trueJSON + base64 data.
+    $trace['step'] = 'legacy_probe';
+    $legacyStockXml = $this->parse_legacy_base64_response((string) $body);
+    if (!is_wp_error($legacyStockXml)) {
+        $trace['stage'] = 'success_legacy_base64';
+        $trace['step'] = 'legacy_probe_success';
+        $this->store_debug_trace($trace);
+        return $legacyStockXml;
+    }
+    $trace['legacy_error_code'] = $legacyStockXml->get_error_code();
+    $trace['legacy_error_message'] = $legacyStockXml->get_error_message();
+
+    $trace['step'] = 'soap_parse';
+
+    // Use DOMDocument for parsing SOAP response
+    $dom = new \DOMDocument();
+    $dom->preserveWhiteSpace = false;
+
+    if (!$dom->loadXML($body)) {
+        $trace['stage'] = 'invalid_soap_xml';
+        $trace['body_head_hex'] = bin2hex(substr((string) $body, 0, 32));
+        $this->store_debug_trace($trace);
+        return new \WP_Error('nebf_invalid_soap_xml', __('Could not parse SOAP XML response.', 'nebf-mvc'));
+    }
+
+    $trace['step'] = 'soap_namespaces';
+    $xpath = new \DOMXPath($dom);
+
+    // Register namespaces
+    $xpath->registerNamespace('soap', 'http://schemas.xmlsoap.org/soap/envelope/');
+    $xpath->registerNamespace('bf', 'http://www.beautyfort.com/api/');
+
+    $trace['step'] = 'soap_response_node';
+
+    // Find GetStockFileResponse using XPath
+    $stockResponses = $xpath->query('//soap:Body/bf:GetStockFileResponse');
+
+    if ($stockResponses->length === 0) {
+        $trace['stage'] = 'missing_getstockfileresponse';
+        $this->store_debug_trace($trace);
+        return new \WP_Error('no_response', __('Could not find GetStockFileResponse in SOAP response.', 'nebf-mvc'));
+    }
+
+    $stockResponse = $stockResponses->item(0);
+
+    $trace['step'] = 'soap_file_decode';
+
+    // Extract the File element using XPath
+    $fileNodes = $xpath->query('.//bf:File', $stockResponse);
+    
+    if ($fileNodes->length === 0) {
+        $trace['stage'] = 'missing_file_node';
+        $this->store_debug_trace($trace);
+        return new \WP_Error('no_file', __('SOAP response did not contain file payload.', 'nebf-mvc'));
+    }
+
+    $encodedFile = trim($fileNodes->item(0)->nodeValue);
+
+    if ($encodedFile === '') {
+        $trace['stage'] = 'missing_file_node';
+        $this->store_debug_trace($trace);
+        return new \WP_Error('no_file', __('SOAP response did not contain file payload.', 'nebf-mvc'));
+    }
+
+    $decodedXml = base64_decode($encodedFile, true);
+    if ($decodedXml === false || $decodedXml === '') {
+        $trace['stage'] = 'base64_decode_failed';
+        $trace['encoded_file_preview'] = substr($encodedFile, 0, 120);
+        $this->store_debug_trace($trace);
+        return new \WP_Error('nebf_xml_error', __('Could not decode Base64 XML from BeautyFort.', 'nebf-mvc'));
+    }
+
+    $trace['step'] = 'stock_xml_parse';
+    $stockXml = simplexml_load_string($decodedXml);
+    if (!$stockXml) {
+        $trace['stage'] = 'invalid_stock_xml';
+        $trace['decoded_xml_preview'] = substr((string) $decodedXml, 0, 600);
+        $this->store_debug_trace($trace);
+        return new \WP_Error('xml_error', __('Could not parse stock XML payload.', 'nebf-mvc'));
+    }
+
+    $trace['stage'] = 'success';
+    $this->store_debug_trace($trace);
+    return $stockXml;
+}
 
     /**
      * Extract stock file payload from SOAP response, including namespaced <ns1:File>.
