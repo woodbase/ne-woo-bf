@@ -9,7 +9,7 @@ $result = $result ?? null;
 <div class="wrap nebf-settings">
     <p><?php esc_html_e('Create a test order directly against BeautyFort CreateOrder API.', 'nebf-mvc'); ?></p>
 
-    <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=test-order')); ?>">
+    <form method="post">
         <?php wp_nonce_field('nebf_create_test_order'); ?>
 
         <table class="form-table">
@@ -40,12 +40,6 @@ $result = $result ?? null;
     </form>
 
     <?php if (is_array($result)) : ?>
-        <p>
-            <strong><?php esc_html_e('Result:', 'nebf-mvc'); ?></strong>
-            <?php echo !empty($result['success'])
-                ? esc_html__('Order created successfully in BeautyFort.', 'nebf-mvc')
-                : esc_html__('Order was not created. See Errors below.', 'nebf-mvc'); ?>
-        </p>
         <h2><?php esc_html_e('CreateOrder Response', 'nebf-mvc'); ?></h2>
         <table class="widefat striped" style="max-width:900px;">
             <tbody>
