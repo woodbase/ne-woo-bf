@@ -16,16 +16,22 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-if (!session_id()) {
+/**
+ * Avoid session warnings (only start if needed and not in CLI)
+ */
+if (!session_id() && !wp_doing_cron() && php_sapi_name() !== 'cli') {
     session_start();
 }
 
+/**
+ * Core constants
+ */
 define('NEBF_MVC_PATH', plugin_dir_path(__FILE__));
 define('NEBF_MVC_URL', plugin_dir_url(__FILE__));
-define('NEBF_MVC_VERSION', '1.0.0');
+define('NEBF_MVC_VERSION', '1.0.0'); // MUST match plugin header
 
 /**
- * Load plugin text domain for translations.
+ * Load translations
  */
 function nebf_mvc_load_textdomain() {
     load_plugin_textdomain(
@@ -37,7 +43,7 @@ function nebf_mvc_load_textdomain() {
 add_action('plugins_loaded', 'nebf_mvc_load_textdomain');
 
 /**
- * Load autoloader
+ * Load core files
  */
 require_once NEBF_MVC_PATH . 'includes/Core/Autoloader.php';
 require_once NEBF_MVC_PATH . 'includes/Support/helpers.php';
@@ -46,7 +52,15 @@ require_once NEBF_MVC_PATH . 'includes/Support/helpers.php';
  * Bootstrap plugin
  */
 function nebf_mvc_boot() {
+
+    // Init main plugin
     $plugin = new NEBF\Core\Plugin();
     $plugin->init();
+
+    // Init GitHub updater (native WP updates + RC ignore)
+    if (is_admin()) {
+        new NEBF\Updater\GitHubUpdater(__FILE__);
+    }
 }
+
 nebf_mvc_boot();
