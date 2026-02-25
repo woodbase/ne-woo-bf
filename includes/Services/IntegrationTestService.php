@@ -80,7 +80,7 @@ class IntegrationTestService
 
             $orderRef = $create['order_reference'];
 
-            $add = $this->api->add_order_item($orderRef, 'TESTSKU1', 1);
+            $add = $this->api->add_order_item($orderRef, 'P407231', 1);
 
             $itemRef = $add['order_item_reference'] ?? null;
 
