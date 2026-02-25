@@ -35,7 +35,9 @@ class AdminPageRouter
             case 'debug':
                 $controller = new DebugController();
                 break;
-
+case 'integration':
+    $controller = new IntegrationController();
+    break;
             case 'dashboard':
             default:
                 $controller = new DashboardController();
@@ -76,7 +78,10 @@ class AdminPageRouter
                    class="nav-tab <?php echo $active_tab === 'test-order' ? 'nav-tab-active' : ''; ?>">
                     <?php esc_html_e('Test Order', 'nebf-mvc'); ?>
                 </a>
-
+<a href="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=integration')); ?>"
+   class="nav-tab <?php echo $active_tab === 'integration' ? 'nav-tab-active' : ''; ?>">
+    <?php esc_html_e('Integration Tests', 'nebf-mvc'); ?>
+</a>
                 <!-- ✅ NEW DEBUG TAB -->
                 <a href="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=debug')); ?>"
                    class="nav-tab <?php echo $active_tab === 'debug' ? 'nav-tab-active' : ''; ?>">

@@ -2,78 +2,124 @@
 if (!defined('ABSPATH')) exit;
 
 $report = is_array($report ?? null) ? $report : [];
+
+// Calculate summary
+$total = count($report);
+$passed = 0;
+$failed = 0;
+
+foreach ($report as $test) {
+    if (!empty($test['success'])) {
+        $passed++;
+    } else {
+        $failed++;
+    }
+}
 ?>
 
 <div class="wrap">
-    <h1><?php esc_html_e('Integration Test Report', 'nebf-mvc'); ?></h1>
+    <h1><?php esc_html_e('Integration Tests', 'nebf-mvc'); ?></h1>
 
-    <div class="nebf-int-card">
+    <form method="post" class="nebf-run-btn">
+        <?php wp_nonce_field('nebf_run_integration_tests'); ?>
+        <button class="button button-primary">
+            <?php esc_html_e('Run Integration Tests', 'nebf-mvc'); ?>
+        </button>
+    </form>
 
-        <table class="widefat striped nebf-int-table">
-            <thead>
-                <tr>
-                    <th style="width:40%;"><?php esc_html_e('Test Case', 'nebf-mvc'); ?></th>
-                    <th style="width:60%;"><?php esc_html_e('Result', 'nebf-mvc'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
+    <?php if (!empty($report)) : ?>
 
-            <?php foreach ($report as $key => $test): ?>
+        <div class="nebf-int-wrapper">
 
-                <?php
-                $success = !empty($test['success']);
-                $rowClass = $success ? '' : 'nebf-row-fail';
+            <div class="nebf-int-card">
 
-                $errorMessage = '';
+                <div class="nebf-int-summary">
+                    <div class="nebf-summary-box nebf-summary-pass">
+                        <?php echo esc_html(sprintf(__('Passed: %d', 'nebf-mvc'), $passed)); ?>
+                    </div>
 
-                if (!$success && !empty($test['result'])) {
+                    <div class="nebf-summary-box nebf-summary-fail">
+                        <?php echo esc_html(sprintf(__('Failed: %d', 'nebf-mvc'), $failed)); ?>
+                    </div>
 
-                    // WP_Error case
-                    if ($test['result'] instanceof \WP_Error) {
-                        $errorMessage = $test['result']->get_error_message();
-                    }
+                    <div class="nebf-summary-box">
+                        <?php echo esc_html(sprintf(__('Total: %d', 'nebf-mvc'), $total)); ?>
+                    </div>
+                </div>
 
-                    // Parsed API error
-                    elseif (!empty($test['result']['errors'][0]['description'])) {
-                        $errorMessage = $test['result']['errors'][0]['description'];
-                    }
+                <table class="widefat striped">
+                    <thead>
+                        <tr>
+                            <th style="width:40%;"><?php esc_html_e('Test Case', 'nebf-mvc'); ?></th>
+                            <th style="width:60%;"><?php esc_html_e('Result', 'nebf-mvc'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
 
-                    // Generic fallback
-                    else {
-                        $errorMessage = __('See Debug page for details.', 'nebf-mvc');
-                    }
-                }
-                ?>
+                    <?php foreach ($report as $key => $test) : ?>
 
-                <tr class="<?php echo esc_attr($rowClass); ?>">
-                    <td>
-                        <strong><?php echo esc_html($key); ?></strong>
-                    </td>
-                    <td>
-                        <?php if ($success): ?>
-                            <span class="nebf-status-badge nebf-pass">PASS</span>
-                        <?php else: ?>
-                            <span class="nebf-status-badge nebf-fail">FAIL</span>
+                        <?php
+                        $success = !empty($test['success']);
+                        $rowClass = $success ? '' : 'nebf-row-fail';
 
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=debug')); ?>"
-                               class="nebf-debug-link">
-                               <?php esc_html_e('Open Debug', 'nebf-mvc'); ?>
-                            </a>
+                        $errorMessage = '';
 
-                            <?php if (!empty($errorMessage)): ?>
-                                <div class="nebf-error-msg">
-                                    <?php echo esc_html($errorMessage); ?>
-                                </div>
-                            <?php endif; ?>
+                        if (!$success && !empty($test['result'])) {
 
-                        <?php endif; ?>
-                    </td>
-                </tr>
+                            if ($test['result'] instanceof \WP_Error) {
+                                $errorMessage = $test['result']->get_error_message();
+                            }
 
-            <?php endforeach; ?>
+                            elseif (!empty($test['result']['errors'][0]['description'])) {
+                                $errorMessage = $test['result']['errors'][0]['description'];
+                            }
 
-            </tbody>
-        </table>
+                            else {
+                                $errorMessage = __('See Debug page for details.', 'nebf-mvc');
+                            }
+                        }
+                        ?>
 
-    </div>
+                        <tr class="<?php echo esc_attr($rowClass); ?>">
+                            <td>
+                                <strong><?php echo esc_html($key); ?></strong>
+                            </td>
+                            <td>
+
+                                <?php if ($success): ?>
+                                    <span class="nebf-status-badge nebf-pass">
+                                        <?php esc_html_e('PASS', 'nebf-mvc'); ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="nebf-status-badge nebf-fail">
+                                        <?php esc_html_e('FAIL', 'nebf-mvc'); ?>
+                                    </span>
+
+                                    <a href="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=debug')); ?>"
+                                       class="nebf-debug-link">
+                                        <?php esc_html_e('Open Debug', 'nebf-mvc'); ?>
+                                    </a>
+
+                                    <?php if (!empty($errorMessage)) : ?>
+                                        <div class="nebf-error-msg">
+                                            <?php echo esc_html($errorMessage); ?>
+                                        </div>
+                                    <?php endif; ?>
+
+                                <?php endif; ?>
+
+                            </td>
+                        </tr>
+
+                    <?php endforeach; ?>
+
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+
+    <?php endif; ?>
+
 </div>
