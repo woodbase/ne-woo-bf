@@ -7,18 +7,19 @@ if (!defined('ABSPATH')) exit;
 /**
  * Handles routing of admin tabs and renders the correct controller
  */
-class AdminPageRouter {
-
+class AdminPageRouter
+{
     public function handle(): void
     {
         // Determine which tab to show
-        $tab = $_GET['tab'] ?? 'dashboard';
+        $tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'dashboard';
 
         // Render header + tabs (always visible)
         $this->render_header_tabs($tab);
 
         // Route to the proper controller
         switch ($tab) {
+
             case 'products':
                 $controller = new ProductsController();
                 break;
@@ -31,6 +32,11 @@ class AdminPageRouter {
                 $controller = new SettingsController();
                 break;
 
+            case 'debug':
+                $controller = new DebugController();
+                break;
+
+            case 'dashboard':
             default:
                 $controller = new DashboardController();
                 break;
@@ -50,6 +56,7 @@ class AdminPageRouter {
             <h1><?php esc_html_e('Nordic Equilibro - BeautyFort integration', 'nebf-mvc'); ?></h1>
 
             <h2 class="nav-tab-wrapper">
+
                 <a href="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=dashboard')); ?>"
                    class="nav-tab <?php echo $active_tab === 'dashboard' ? 'nav-tab-active' : ''; ?>">
                     <?php esc_html_e('Dashboard', 'nebf-mvc'); ?>
@@ -69,6 +76,13 @@ class AdminPageRouter {
                    class="nav-tab <?php echo $active_tab === 'test-order' ? 'nav-tab-active' : ''; ?>">
                     <?php esc_html_e('Test Order', 'nebf-mvc'); ?>
                 </a>
+
+                <!-- ✅ NEW DEBUG TAB -->
+                <a href="<?php echo esc_url(admin_url('admin.php?page=nebf-mvc&tab=debug')); ?>"
+                   class="nav-tab <?php echo $active_tab === 'debug' ? 'nav-tab-active' : ''; ?>">
+                    <?php esc_html_e('Debug', 'nebf-mvc'); ?>
+                </a>
+
             </h2>
         </div>
         <?php
