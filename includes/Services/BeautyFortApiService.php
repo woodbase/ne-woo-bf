@@ -91,7 +91,11 @@ class BeautyFortApiService
             return $this->fail_trace($trace, $request->get_error_message(), $request->get_error_code());
         }
 
-        $parsed = $this->parse_generic_response($request['body'], $responseTag);
+        if ($responseTag === 'CreateOrderResponse') {
+    $parsed = $this->parse_create_order_response($request['body']);
+} else {
+    $parsed = $this->parse_generic_response($request['body'], $responseTag);
+}
 
         if (is_wp_error($parsed)) {
             return $this->fail_trace($trace, $parsed->get_error_message(), $parsed->get_error_code());
@@ -266,4 +270,60 @@ class BeautyFortApiService
     {
         return get_option('nebf_api_testmode', '0') === '1' ? 'true' : 'false';
     }
+
+    private function parse_create_order_response(string $body)
+{
+    $dom = new \DOMDocument();
+
+    if (!$dom->loadXML($body)) {
+        return new \WP_Error('nebf_invalid_xml', 'Invalid SOAP XML.');
+    }
+
+    $xpath = new \DOMXPath($dom);
+
+    // Namespace-agnostisk matchning
+    $nodes = $xpath->query('//*[local-name()="CreateOrderResponse"]');
+
+    if ($nodes->length === 0) {
+        return new \WP_Error('nebf_missing_response', 'CreateOrderResponse not found.');
+    }
+
+    $node = $nodes->item(0);
+
+    $orderRefNode = $xpath->query('.//*[local-name()="OrderReference"]', $node)->item(0);
+    $yourRefNode  = $xpath->query('.//*[local-name()="YourOrderReference"]', $node)->item(0);
+
+    $orderReference = $orderRefNode ? (int)$orderRefNode->nodeValue : 0;
+    $yourReference  = $yourRefNode ? $yourRefNode->nodeValue : null;
+
+    $errors = [];
+    foreach ($xpath->query('.//*[local-name()="Error"]', $node) as $errorNode) {
+        $codeNode = $xpath->query('.//*[local-name()="Code"]', $errorNode)->item(0);
+        $descNode = $xpath->query('.//*[local-name()="Description"]', $errorNode)->item(0);
+
+        $errors[] = [
+            'code' => $codeNode ? (int)$codeNode->nodeValue : 0,
+            'description' => $descNode ? $descNode->nodeValue : '',
+        ];
+    }
+
+    $warnings = [];
+    foreach ($xpath->query('.//*[local-name()="Warning"]', $node) as $warningNode) {
+        $codeNode = $xpath->query('.//*[local-name()="Code"]', $warningNode)->item(0);
+        $descNode = $xpath->query('.//*[local-name()="Description"]', $warningNode)->item(0);
+
+        $warnings[] = [
+            'code' => $codeNode ? (int)$codeNode->nodeValue : 0,
+            'description' => $descNode ? $descNode->nodeValue : '',
+        ];
+    }
+
+    return [
+        'success' => empty($errors) && $orderReference > 0,
+        'order_reference' => $orderReference,
+        'your_order_reference' => $yourReference,
+        'errors' => $errors,
+        'warnings' => $warnings,
+    ];
+}
 }
